@@ -4,6 +4,12 @@ back/node_modules/
 front/node_modules/
 .pnp
 .pnp.js
+.venv/
+venv/
+Back/.venv/
+Back/venv/
+__pycache__/
+*.py[cod]
 
 # Variables de entorno y secretos
 .env
@@ -45,3 +51,8 @@ coverage/
 .npm
 .eslintcache
 .cache/
+
+# Documentos locales
+informe.md
+guia_backend_rol_b.txt
+
