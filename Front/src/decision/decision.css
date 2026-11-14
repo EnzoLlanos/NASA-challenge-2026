@@ -1,0 +1,91 @@
+.decision {
+  --verde: #2e9e5b; --verde-bg: #e3f5ea;
+  --ambar: #e0a100; --ambar-bg: #fdf3d6;
+  --rojo: #d6403a; --rojo-bg: #fbe4e2;
+  --azul: #2670c9; --azul-bg: #e2eefb;
+  --ink: #1d2a24; --muted: #5d6b64; --line: #dde5e0;
+  text-align: left; color: var(--ink); padding: 16px;
+  display: flex; flex-direction: column; gap: 20px; font-size: 15px; line-height: 1.4;
+}
+.decision h2 { margin: 0; font-size: 20px; color: var(--ink); }
+.decision h3 { margin: 0; font-size: 17px; color: var(--ink); }
+.decision h4 { margin: 14px 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.decision p { margin: 0; }
+.sub { color: var(--muted); margin: 4px 0 12px !important; }
+.mock-tag { align-self: flex-start; font-size: 12px; background: var(--azul-bg); color: var(--azul); padding: 2px 10px; border-radius: 99px; }
+
+.insignia { display: inline-block; padding: 2px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+.insignia.verde { background: var(--verde-bg); color: var(--verde); }
+.insignia.ambar { background: var(--ambar-bg); color: #8a6500; }
+.insignia.rojo { background: var(--rojo-bg); color: var(--rojo); }
+.insignia.azul { background: var(--azul); color: #fff; }
+.insignia.azul-suave { background: var(--azul-bg); color: var(--azul); }
+
+.aviso { display: flex; gap: 12px; align-items: flex-start; background: var(--ambar-bg); border: 1px solid var(--ambar); border-left-width: 6px; border-radius: 10px; padding: 12px 16px; font-size: 14px; }
+.aviso > span { font-size: 22px; }
+
+.barra-titulo { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
+.selector, .pestanas { display: inline-flex; gap: 4px; background: #eef2ef; padding: 4px; border-radius: 10px; }
+.pestanas { margin-bottom: 12px; flex-wrap: wrap; }
+.selector button, .pestanas button { border: 0; background: transparent; padding: 6px 14px; border-radius: 8px; cursor: pointer; font: inherit; color: var(--muted); }
+.selector button.on, .pestanas button.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+
+.tarjetas { display: grid; gap: 16px; }
+.tarjetas.lado { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+.tarjetas.selector { grid-template-columns: minmax(260px, 520px); }
+.tarjeta { background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; }
+.tarjeta.activa { border-color: var(--azul); box-shadow: 0 4px 14px rgba(38,112,201,.15); }
+.tarjeta header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+.resumen { color: var(--muted); font-size: 14px; }
+
+.medidor { position: relative; text-align: center; margin: 8px auto 10px; width: 170px; }
+.medidor svg { width: 100%; display: block; }
+.medidor path { fill: none; stroke-width: 12; stroke-linecap: round; }
+.medidor-fondo { stroke: #e8ede9; }
+.medidor.verde .medidor-valor { stroke: var(--verde); }
+.medidor.ambar .medidor-valor { stroke: var(--ambar); }
+.medidor.rojo .medidor-valor { stroke: var(--rojo); }
+.medidor-num { position: absolute; left: 0; right: 0; top: 34px; font-size: 28px; font-weight: 700; }
+
+.secuencia { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.paso { display: flex; flex-direction: column; padding: 6px 10px; border-radius: 8px; background: var(--verde-bg); border-left: 4px solid var(--verde); }
+.paso.cobertura { background: var(--azul-bg); border-left-color: var(--azul); }
+.paso-nombre { font-weight: 600; font-size: 14px; }
+.paso-meses { font-size: 12px; color: var(--muted); }
+
+.barrita { margin-bottom: 8px; }
+.barrita-top { display: flex; justify-content: space-between; font-size: 13px; }
+.barrita-pista { height: 10px; background: #eef2ef; border-radius: 99px; overflow: hidden; }
+.barrita-relleno { height: 100%; border-radius: 99px; transition: width .4s; }
+.barrita-relleno.verde { background: var(--verde); }
+.barrita-relleno.ambar { background: var(--ambar); }
+.barrita-relleno.rojo { background: var(--rojo); }
+
+.boton { margin-top: auto; padding: 9px; border-radius: 9px; border: 1px solid var(--azul); background: #fff; color: var(--azul); font: inherit; font-weight: 600; cursor: pointer; }
+.tarjeta .boton { margin-top: 14px; }
+.tarjeta.activa .boton { background: var(--azul); color: #fff; }
+
+.panel { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.panel.nasa { background: linear-gradient(135deg, #0b2a4a, #14467a); color: #fff; border: 0; }
+.panel.nasa h2 { color: #fff; margin-bottom: 14px; font-size: 22px; }
+.nasa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
+.nasa-card { background: #fff; color: var(--ink); border-radius: 12px; padding: 14px; border-top: 5px solid var(--azul); display: flex; flex-direction: column; gap: 8px; }
+.nasa-card.rojo { border-top-color: var(--rojo); }
+.nasa-card.verde { border-top-color: var(--verde); }
+.nasa-cab { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+.nasa-card small { color: var(--muted); margin-top: auto; }
+
+.timeline { overflow-x: auto; }
+.tl-fila { display: grid; grid-template-columns: 140px repeat(12, minmax(24px, 1fr)); gap: 3px; align-items: center; margin-bottom: 3px; min-width: 460px; }
+.tl-label { font-size: 13px; font-weight: 600; }
+.tl-mes { text-align: center; font-size: 12px; color: var(--muted); }
+.tl-celda { height: 26px; border-radius: 5px; background: #f1f4f2; text-align: center; font-size: 13px; line-height: 26px; }
+.tl-celda.on { background: var(--verde); }
+.tl-celda.on.cobertura { background: var(--azul); }
+.tl-celda.estado { height: 16px; }
+.tl-celda.cubierto { background: var(--verde); }
+.tl-celda.vulnerable { background: var(--ambar); }
+.tl-celda.desnudo { background: var(--rojo); }
+.leyenda { list-style: none; display: flex; flex-wrap: wrap; gap: 14px; padding: 0; margin: 12px 0 0; font-size: 13px; color: var(--muted); }
+.dot { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 4px; }
+.dot.verde { background: var(--verde); } .dot.ambar { background: var(--ambar); } .dot.rojo { background: var(--rojo); }
