@@ -1,0 +1,20 @@
+{
+  "annual_precip_mm": 20052.2,
+  "precip_trend": "reducci\u00f3n",
+  "heat_days_by_decade": {
+    "2000": 222,
+    "2010": 252,
+    "2020": 211
+  },
+  "heat_trend": "reducci\u00f3n",
+  "frost_days_by_decade": {
+    "2000": 161,
+    "2010": 146,
+    "2020": 78
+  },
+  "frost_trend": "reducci\u00f3n",
+  "summer_temp_mean_c": 23.46,
+  "summer_precip_mm": 114.13,
+  "dry_months_pct": 47.8,
+  "wet_months_pct": 25.6
+}
