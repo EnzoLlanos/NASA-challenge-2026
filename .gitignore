@@ -51,3 +51,9 @@ coverage/
 .npm
 .eslintcache
 .cache/
+
+# Documentos locales
+informe.md
+guia_backend_rol_b.txt
+
+
