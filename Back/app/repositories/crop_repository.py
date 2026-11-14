@@ -1,5 +1,7 @@
 from typing import List, Optional, Dict
 import unicodedata
+from pathlib import Path
+import yaml
 from app.schemas.crop import CropResponse
 
 
@@ -98,32 +100,95 @@ ALIAS_MAP: Dict[str, str] = {
 
 
 class CropRepository:
-    """Repositorio para acceder a los rasgos agronómicos de los cultivos."""
+    """Repositorio para acceder a los rasgos agronómicos de los cultivos con soporte para crops.yaml."""
 
-    @staticmethod
-    def get_all(season: Optional[str] = None) -> List[CropResponse]:
+    _cached_crops: Optional[Dict[str, dict]] = None
+    _data_source: str = "calibrated_defaults"
+
+    @classmethod
+    def _find_yaml_path(cls) -> Optional[Path]:
+        """Busca crops.yaml en rutas relativas probables dentro del workspace."""
+        possible_paths = [
+            Path("data/crops.yaml"),
+            Path("../data/crops.yaml"),
+            Path("../../data/crops.yaml"),
+            Path(__file__).resolve().parents[3] / "data" / "crops.yaml",
+        ]
+        for p in possible_paths:
+            if p.is_file():
+                return p
+        return None
+
+    @classmethod
+    def _load_data(cls) -> Dict[str, dict]:
+        """Carga cultivos desde crops.yaml si existe, o recurre a la base por defecto."""
+        if cls._cached_crops is not None:
+            return cls._cached_crops
+
+        yaml_path = cls._find_yaml_path()
+        if yaml_path:
+            try:
+                with open(yaml_path, "r", encoding="utf-8") as f:
+                    content = yaml.safe_load(f)
+                crops_list = content.get("crops", []) if isinstance(content, dict) else content
+                loaded = {}
+                for item in crops_list:
+                    cid = str(item.get("id") or _normalize_key(item.get("name", "")))
+                    loaded[cid] = {
+                        "id": cid,
+                        "name": item.get("name", cid.capitalize()),
+                        "water_consumption_mm": float(item.get("water_consumption_mm") or item.get("water_consumption", 400)),
+                        "drought_tolerance": float(item.get("drought_tolerance", 0.5)),
+                        "nitrogen_fixation": bool(item.get("nitrogen_fixation", False)),
+                        "root_depth_cm": int(item.get("root_depth_cm") or item.get("root_depth", 100)),
+                        "market_potential": item.get("market_potential", "medio"),
+                        "cycle_season": item.get("cycle_season", "estival"),
+                    }
+                if loaded:
+                    cls._cached_crops = loaded
+                    cls._data_source = str(yaml_path)
+                    return cls._cached_crops
+            except Exception:
+                pass
+
+        cls._cached_crops = dict(CROPS_DATABASE)
+        cls._data_source = "calibrated_defaults"
+        return cls._cached_crops
+
+    @classmethod
+    def get_data_source(cls) -> str:
+        """Indica si los datos provienen de crops.yaml o de valores por defecto calibrados."""
+        if cls._cached_crops is None:
+            cls._load_data()
+        return cls._data_source
+
+    @classmethod
+    def get_all(cls, season: Optional[str] = None) -> List[CropResponse]:
         """
         Devuelve los cultivos disponibles con sus rasgos.
         Permite filtrado opcional por estación de ciclo (estival, invernal, cobertura).
         """
-        crops = [CropResponse(**data) for data in CROPS_DATABASE.values()]
+        db = cls._load_data()
+        crops = [CropResponse(**data) for data in db.values()]
         if season and isinstance(season, str) and season.strip():
             season_norm = _normalize_key(season)
             crops = [c for c in crops if _normalize_key(c.cycle_season) == season_norm]
         return crops
 
-
-    @staticmethod
-    def find_by_name_or_id(identifier: str) -> Optional[dict]:
+    @classmethod
+    def find_by_name_or_id(cls, identifier: str) -> Optional[dict]:
         """Busca un cultivo por id o nombre normalizado."""
+        db = cls._load_data()
         norm = _normalize_key(identifier)
         crop_id = ALIAS_MAP.get(norm, norm)
-        return CROPS_DATABASE.get(crop_id)
+        return db.get(crop_id)
 
-    @staticmethod
-    def get_by_id(crop_id: str) -> Optional[CropResponse]:
+    @classmethod
+    def get_by_id(cls, crop_id: str) -> Optional[CropResponse]:
         """Obtiene un cultivo por su identificador estricto."""
-        data = CROPS_DATABASE.get(crop_id)
+        db = cls._load_data()
+        data = db.get(crop_id)
         if data:
             return CropResponse(**data)
         return None
+

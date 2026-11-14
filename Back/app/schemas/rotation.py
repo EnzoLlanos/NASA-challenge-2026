@@ -35,9 +35,22 @@ class StrategyOption(BaseModel):
     why: str = Field(..., description="Justificación agronómica y balance general")
     benefits: List[str] = Field(..., description="Lista de beneficios principales")
     evidence: str = Field(..., description="Evidencia de respaldo con datos climáticos o satelitales (NASA POWER)")
+    evidence_details: Optional[dict] = Field(
+        None,
+        description="Evidencia estructurada con trazabilidad científica (dataset, finding, resolution, period)"
+    )
     risks_to_validate: str = Field(..., description="Factores de riesgo o advertencias a validar con asesor local")
 
 
 class RotationResponse(BaseModel):
     recommendation: str = Field(..., description="Nombre de la estrategia óptima recomendada")
     strategies: List[StrategyOption] = Field(..., description="Listado de estrategias comparadas ordenadas por puntaje")
+    data_gaps: List[str] = Field(
+        default_factory=lambda: [
+            "Resolución espacial NASA POWER ~0.5° (~50 km), no captura microclimas a nivel de lote individual.",
+            "Ausencia de sensores de humedad de suelo in situ: validar humedad útil antes de siembras críticas.",
+            "Recomendación agronómica orientativa: contrastar siempre con el asesor técnico local."
+        ],
+        description="Brechas de información y limitaciones honestas del modelo satelital"
+    )
+

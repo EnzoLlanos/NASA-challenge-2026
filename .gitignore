@@ -56,3 +56,9 @@ coverage/
 historial_cambios.md
 guia/
 *.txt
+
+# Documentos locales
+informe.md
+guia_backend_rol_b.txt
+guia2.md
+
