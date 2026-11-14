@@ -4,10 +4,11 @@ from app.routers import crops, rotations
 
 app = FastAPI(
     title="Adapting Farms with NASA Data API",
+    description="API de apoyo a la decisión para adaptación agrícola con datos satelitales NASA POWER",
     version="0.1.0",
 )
 
-# Middlewares (CORS)
+# Middlewares (CORS habilitado para React + Vite)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -22,7 +23,7 @@ app.include_router(rotations.router)
 
 
 # Ruta de prueba / estado del servidor
-@app.get("/api/health")
+@app.get("/api/health", tags=["Salud del Servidor"])
 def health_check():
     return {
         "status": "ok",

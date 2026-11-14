@@ -52,9 +52,13 @@ coverage/
 .eslintcache
 .cache/
 
+# Archivos y notas personales (no se suben a Git)
+historial_cambios.md
+guia/
+*.txt
+
 # Documentos locales
 informe.md
 guia_backend_rol_b.txt
 guia2.md
-
 
