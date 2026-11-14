@@ -265,17 +265,21 @@ def monthly_features(df):
 
 
 def save_daily_csv(df, path):
-    """Guarda una muestra de datos diarios en CSV."""
+    """Guarda la serie diaria COMPLETA en CSV.
+
+    Nota: df ya tiene las variables renombradas (temp_mean_c, ...), por lo
+    que hay que iterar sobre los valores de VAR_MAP, no sobre sus claves.
+    """
+    var_names = list(VAR_MAP.values())
     with open(path, "w", encoding="utf-8") as f:
-        f.write("date," + ",".join(VAR_MAP.values()) + "\n")
-        count = 0
-        for date_str in sorted(df.keys())[:30]:  # Primeras 30 fechas
+        f.write("date," + ",".join(var_names) + "\n")
+        for date_str in sorted(df.keys()):
             var_dict = df[date_str]
             row = date_str
-            for var_name in VAR_MAP:
-                row += f",{var_dict.get(var_name, None)}"
+            for var_name in var_names:
+                val = var_dict.get(var_name)
+                row += "," + ("" if val is None else str(val))
             f.write(row + "\n")
-            count += 1
 
 
 def save_monthly_csv(monthly, path):
