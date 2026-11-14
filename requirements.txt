@@ -1,0 +1,5 @@
+# Dependencias del pipeline de datos (NASA Space Apps 2026)
+# Instalar: pip install -r requirements.txt
+pandas>=2.0
+pyyaml>=6.0
+requests>=2.31

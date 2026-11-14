@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from app.routers import crops, rotations
 
 app = FastAPI(
     title="Adapting Farms with NASA Data API",
@@ -16,6 +17,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Routers de la API
+app.include_router(crops.router)
+app.include_router(rotations.router)
+
 
 # Ruta de prueba / estado del servidor
 @app.get("/api/health", tags=["Salud del Servidor"])
@@ -24,3 +29,4 @@ def health_check():
         "status": "ok",
         "message": "Servidor de Adapting Farms with NASA Data funcionando correctamente",
     }
+
