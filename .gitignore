@@ -51,3 +51,8 @@ coverage/
 .npm
 .eslintcache
 .cache/
+
+# Archivos y notas personales (no se suben a Git)
+historial_cambios.md
+guia/
+*.txt
