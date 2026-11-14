@@ -11,8 +11,13 @@ Salida: Diccionario de indicadores impreso en consola y guardado en JSON
 
 import csv
 import json
+import sys
 from pathlib import Path
 from collections import defaultdict
+
+# Consolas Windows (cp1252) no pueden imprimir símbolos como ≤ sin esto
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 
 # Rutas
