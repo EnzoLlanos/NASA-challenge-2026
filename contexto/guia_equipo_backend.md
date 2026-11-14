@@ -2,7 +2,7 @@
 
 ## 📍 Estado actual del proyecto
 - **Dataset NASA POWER**: Procesado y listo en `data/processed/power_monthly.csv`
-- **Estructura del repositorio**: Already tiene backend/ folder con package.json, .env.example
+- **Estructura del repositorio**: Carpeta `Back/` migrada a Python (`FastAPI`, `requirements.txt`, `run.py`, `app/main.py`, `app/schemas.py`, `app/data_loader.py`, `app/scoring/`)
 - **Objeto principal**: Implementar API FastAPI + Pydantic que sirva los datos climáticos y el motor de puntuación de rotaciones
 
 ## 👥 Integración del equipo
@@ -11,28 +11,66 @@
   - **Equipo Datos**: Para consumo de `power_monthly.csv` y eventual `crops.yaml`
   - **Equipo Frontend**: Para contrato de API (`schemas.py`, endpoints)
 
-## 🚀 Paso 1: Preparar entorno (30 min)
+## 🚀 Paso 1: Preparar entorno e iniciar el servidor (30 min)
 
-```bash
-# 1. Verificar estructura actual
-ls -la Back/src/ Back/app/ 2>/dev/null || echo "Estructura a crear"
+### 🪟 En Windows (PowerShell)
 
-# 2. Install dependencias si es necesario
-# El Back/ package.json sugiere Node, pero el backend es Python
-# Verificar si existe entorno Python
-python3 --version
-which python3
+#### 1. Instalar Python 3.12 (si no está instalado)
+```powershell
+winget install -e --id Python.Python.3.12 --scope user
+```
 
-# 3. Moverse al directorio backend
+#### 2. Solucionar error de alias de Microsoft Store (`"no se encontró Python..."`)
+Si al correr `python` aparece el mensaje de Microsoft Store, es porque `WindowsApps` está antes que Python en el `PATH`. Ejecutá esto en PowerShell para corregirlo:
+```powershell
+$pyDir = "$env:LOCALAPPDATA\Programs\Python\Python312"
+$pyScripts = "$env:LOCALAPPDATA\Programs\Python\Python312\Scripts"
+$userPath = [Environment]::GetEnvironmentVariable("Path", "User")
+$parts = $userPath -split ";" | Where-Object { $_ -and ($_ -ne $pyDir) -and ($_ -ne $pyScripts) }
+[Environment]::SetEnvironmentVariable("Path", ((@($pyDir, $pyScripts) + $parts) -join ";"), "User")
+```
+
+#### 3. Crear entorno virtual `.venv` e instalar dependencias
+```powershell
 cd Back
 
-# 4. Instalar FastAPI y Pydantic si no existen
-python3 -m pip install fastapi uvicorn pydantic 2>/dev/null || \
-  apt list --installed 2>/dev/null | grep python3-pip
+# Crear entorno virtual
+python -m venv .venv
+# (O usando ruta explícita si no reiniciaste la terminal):
+# & "$env:LOCALAPPDATA\Programs\Python\Python312\python.exe" -m venv .venv
 
-# 5. Verificar .env.example
-cat .env.example 2>/dev/null || echo "No existe, crear uno"
+# Instalar dependencias de requirements.txt
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
+
+#### 4. Iniciar el servidor
+```powershell
+# Opción A: Directo con el ejecutable del entorno virtual (sin problemas de ExecutionPolicy)
+.\.venv\Scripts\python.exe run.py
+
+# Opción B: Activando el entorno virtual primero en PowerShell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+.\.venv\Scripts\Activate.ps1
+python run.py
+```
+
+---
+
+### 🐧 En Linux / macOS (Bash)
+```bash
+cd Back
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+python run.py
+```
+
+---
+
+### 🌐 URLs con el servidor corriendo
+- **Healthcheck**: `http://localhost:8000/api/health`
+- **Swagger UI (documentación interactiva)**: `http://localhost:8000/docs`
+- **ReDoc**: `http://localhost:8000/redoc`
 
 ## 📋 Paso 2: Definir schemas API (1 hora)
 
@@ -410,7 +448,7 @@ if __name__ == "__main__":
 ```bash
 # 1. Ejecutar el servidor
 cd Back
-python3 -m uvicorn app.app:app --reload  # Ajustar según estructura real
+python run.py  # o: .\.venv\Scripts\python.exe run.py en Windows
 
 # 2. Probar endpoints con curl o en navegador
 curl http://localhost:8000/api/crops
