@@ -236,6 +236,12 @@ def monthly_features(df):
             vals = acc[key]
             all_temps.extend([v for v in vals if v is not None])
 
+        # Promedios de humedad de suelo y suma de evapotranspiración del mes
+        soil_root = acc["soil_root"]
+        evap = acc["evap"]
+        soil_root_mean = round(sum(soil_root) / len(soil_root), 3) if soil_root else None
+        evap_sum = round(sum(evap), 2) if evap else None
+
         if all_temps:
             result[year_month] = {
                 "temp_mean_c": round(sum(all_temps) / len(all_temps), 2),
@@ -245,6 +251,8 @@ def monthly_features(df):
                 "frost_days": acc["frost_count"],
                 "heat_days_35": acc["heat_count"],
                 "total_days": acc["total_days"],
+                "soil_wet_root_mean": soil_root_mean,
+                "evap_land_mm_sum": evap_sum,
                 "month": int(year_month.split("-")[1]),
                 "year": int(year_month.split("-")[0]),
             }
@@ -257,6 +265,8 @@ def monthly_features(df):
                 "frost_days": 0,
                 "heat_days_35": 0,
                 "total_days": 0,
+                "soil_wet_root_mean": None,
+                "evap_land_mm_sum": None,
                 "month": int(year_month.split("-")[1]),
                 "year": int(year_month.split("-")[0]),
             }
@@ -265,26 +275,41 @@ def monthly_features(df):
 
 
 def save_daily_csv(df, path):
-    """Guarda una muestra de datos diarios en CSV."""
+    """Guarda la serie diaria COMPLETA en CSV.
+
+    Nota: df ya tiene las variables renombradas (temp_mean_c, ...), por lo
+    que hay que iterar sobre los valores de VAR_MAP, no sobre sus claves.
+    """
+    var_names = list(VAR_MAP.values())
     with open(path, "w", encoding="utf-8") as f:
-        f.write("date," + ",".join(VAR_MAP.values()) + "\n")
-        count = 0
-        for date_str in sorted(df.keys())[:30]:  # Primeras 30 fechas
+        f.write("date," + ",".join(var_names) + "\n")
+        for date_str in sorted(df.keys()):
             var_dict = df[date_str]
             row = date_str
-            for var_name in VAR_MAP:
-                row += f",{var_dict.get(var_name, None)}"
+            for var_name in var_names:
+                val = var_dict.get(var_name)
+                row += "," + ("" if val is None else str(val))
             f.write(row + "\n")
-            count += 1
 
 
 def save_monthly_csv(monthly, path):
-    """Guarda features mensuales en CSV."""
+    """Guarda features mensuales en CSV (columnas completas)."""
+    cols = [
+        "year_month", "year", "month",
+        "temp_mean_c", "temp_max_c", "temp_min_c",
+        "precip_mm_sum", "frost_days", "heat_days_35",
+        "soil_wet_root_mean", "evap_land_mm_sum", "total_days",
+    ]
     with open(path, "w", encoding="utf-8") as f:
-        f.write("year_month,temp_mean_c,precip_mm_sum,frost_days,heat_days_35,total_days\n")
+        f.write(",".join(cols) + "\n")
         for year_month in sorted(monthly.keys()):
             d = monthly[year_month]
-            f.write(f"{year_month},{d['temp_mean_c']},{d['precip_mm_sum']},{d['frost_days']},{d['heat_days_35']},{d['total_days']}\n")
+            f.write(
+                f"{year_month},{d['year']},{d['month']},"
+                f"{d['temp_mean_c']},{d['temp_max_c']},{d['temp_min_c']},"
+                f"{d['precip_mm_sum']},{d['frost_days']},{d['heat_days_35']},"
+                f"{d['soil_wet_root_mean']},{d['evap_land_mm_sum']},{d['total_days']}\n"
+            )
 
 
 if __name__ == "__main__":

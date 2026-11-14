@@ -1,122 +1,67 @@
-import { useState } from 'react'
-import heroImg from './assets/hero.png'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import './App.css'
+import { useState } from "react";
+import Sidebar from "./components/config/Sidebar";
+import { SAMPLE_LOT_SAN_LUIS } from "./data/mockData";
+import "./styles/config.css";
+import DecisionBoard from "./decision/DecisionBoard.jsx";
 
-function App() {
-  const [count, setCount] = useState(0)
+export default function App() {
+  // Estado de configuración del lote (Dev 1)
+  const [config, setConfig] = useState({
+    coords: SAMPLE_LOT_SAN_LUIS.coords,
+    currentCrop: "Soja",
+    irrigation: "lluvia",
+    priorities: {
+      water: true,
+      nutrients: true,
+      erosion: true,
+      forageProfit: false
+    },
+    lotName: SAMPLE_LOT_SAN_LUIS.name
+  });
+
+  const [isLoading, setIsLoading] = useState(false);
+  // Configuración con la que se simuló por última vez (la consume el Tablero de Decisión)
+  const [simParams, setSimParams] = useState(null);
+
+  // Acción del botón principal "Simular Rotaciones"
+  const handleSimulate = () => {
+    setIsLoading(true);
+    // Pequeño retardo para simular la consulta satelital
+    setTimeout(() => {
+      setSimParams({ ...config });
+      setIsLoading(false);
+    }, 700);
+  };
 
   return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.jsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
+    <div className="app-container">
+      {/* BLOQUE 1: Panel Lateral de Configuración (Tu parte - Dev 1) */}
+      <Sidebar
+        config={config}
+        onConfigChange={setConfig}
+        onSimulate={handleSimulate}
+        isLoading={isLoading}
+      />
 
-      <div className="ticks"></div>
+      {/* BLOQUES 2 y 3: Área Principal / Tablero de Decisión (Para tu amigo - Dev 2) */}
+      <main className="main-dashboard">
+        <header className="dashboard-header">
+          <div className="dashboard-title">
+            <h2>Tablero de Decisión Agronómica</h2>
+            <p>
+              Campo evaluado: <strong>{config.lotName || "Lote seleccionado"}</strong> (
+              {config.coords.lat}, {config.coords.lng}) &bull; Cultivo actual:{" "}
+              <strong>{config.currentCrop}</strong>
+            </p>
+          </div>
+          <div className="nasa-tag">
+            <span>🛰️</span> Modelos NASA SMAP &bull; ECOSTRESS &bull; GPM
+          </div>
+        </header>
 
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+        {/* Bloques 2 y 3: tablero de decisión + evidencia NASA + timeline (Dev 2) */}
+        <DecisionBoard params={simParams} />
+      </main>
+    </div>
+  );
 }
-
-export default App
