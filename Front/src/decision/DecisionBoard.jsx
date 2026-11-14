@@ -206,9 +206,12 @@ function AvisoAgronomo() {
 }
 
 // Bloques 2 y 3. Props opcionales: `simulacion` (objeto ya cargado) o `params` para el fetch.
-export default function DecisionBoard({ simulacion, params }) {
-  const { data: fetched, loading, mock } = useSimulation(params);
+export default function DecisionBoard({ simulacion, params, isLoading: propLoading }) {
+  const { data: fetched, loading: hookLoading, mock } = useSimulation(simulacion ? null : params);
   const sim = simulacion ?? fetched;
+  const isMock = !simulacion && mock;
+  const estaCargando = propLoading || hookLoading;
+
   const [sel, setSel] = useState(null);
   const [vista, setVista] = useState('lado'); // 'lado' | 'selector'
 
@@ -217,8 +220,8 @@ export default function DecisionBoard({ simulacion, params }) {
 
   return (
     <div className="decision">
-      {mock && <div className="mock-tag">Datos de ejemplo (simulación mock)</div>}
-      {loading && <p className="sub">Calculando estrategias…</p>}
+      {isMock && <div className="mock-tag">Datos de ejemplo (simulación mock)</div>}
+      {estaCargando && <p className="sub">Calculando estrategias con datos NASA…</p>}
       <AvisoAgronomo />
 
       <section aria-labelledby="c-titulo">

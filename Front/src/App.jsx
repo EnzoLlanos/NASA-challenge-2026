@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Sidebar from "./components/config/Sidebar";
 import { SAMPLE_LOT_SAN_LUIS } from "./data/mockData";
 import "./styles/config.css";
 import DecisionBoard from "./decision/DecisionBoard.jsx";
+import { simulateRotations } from "./services/simulationService.js";
 
 export default function App() {
   // Estado de configuración del lote (Dev 1)
@@ -14,28 +15,43 @@ export default function App() {
       water: true,
       nutrients: true,
       erosion: true,
-      forageProfit: false
+      forageProfit: false,
     },
-    lotName: SAMPLE_LOT_SAN_LUIS.name
+    lotName: SAMPLE_LOT_SAN_LUIS.name,
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  // Configuración con la que se simuló por última vez (la consume el Tablero de Decisión)
-  const [simParams, setSimParams] = useState(null);
+  const [simulationData, setSimulationData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  // Ejecuta la llamada al servicio de simulación de la API
+  const runSimulation = async (paramsToSimulate) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await simulateRotations(paramsToSimulate);
+      setSimulationData(data);
+    } catch (err) {
+      console.error("Error al conectar con la API de simulación:", err);
+      setErrorMessage(`No se pudo conectar a la API (FastAPI en http://127.0.0.1:8000): ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Cargar simulación inicial con el lote por defecto al abrir la aplicación
+  useEffect(() => {
+    runSimulation(config);
+  }, []);
 
   // Acción del botón principal "Simular Rotaciones"
   const handleSimulate = () => {
-    setIsLoading(true);
-    // Pequeño retardo para simular la consulta satelital
-    setTimeout(() => {
-      setSimParams({ ...config });
-      setIsLoading(false);
-    }, 700);
+    runSimulation(config);
   };
 
   return (
     <div className="app-container">
-      {/* BLOQUE 1: Panel Lateral de Configuración (Tu parte - Dev 1) */}
+      {/* BLOQUE 1: Panel Lateral de Configuración (Dev 1) */}
       <Sidebar
         config={config}
         onConfigChange={setConfig}
@@ -43,7 +59,7 @@ export default function App() {
         isLoading={isLoading}
       />
 
-      {/* BLOQUES 2 y 3: Área Principal / Tablero de Decisión (Para tu amigo - Dev 2) */}
+      {/* BLOQUES 2 y 3: Área Principal / Tablero de Decisión (Dev 2) */}
       <main className="main-dashboard">
         <header className="dashboard-header">
           <div className="dashboard-title">
@@ -59,8 +75,24 @@ export default function App() {
           </div>
         </header>
 
-        {/* Bloques 2 y 3: tablero de decisión + evidencia NASA + timeline (Dev 2) */}
-        <DecisionBoard params={simParams} />
+        {errorMessage && (
+          <div
+            style={{
+              background: "#fee2e2",
+              border: "1px solid #ef4444",
+              color: "#991b1b",
+              padding: "10px 16px",
+              borderRadius: "8px",
+              margin: "12px 24px",
+              fontSize: "0.85rem",
+            }}
+          >
+            ⚠️ <strong>Aviso:</strong> {errorMessage}
+          </div>
+        )}
+
+        {/* Bloques 2 y 3: tablero de decisión + evidencia NASA + timeline */}
+        <DecisionBoard simulacion={simulationData} params={config} isLoading={isLoading} />
       </main>
     </div>
   );
