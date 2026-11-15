@@ -9,14 +9,14 @@ const METRICAS = [
   { key: 'agua', label: 'Agua', icon: '💧', hint: 'Uso eficiente del agua' },
   { key: 'nutrientes', label: 'Nutrientes', icon: '🌱', hint: 'Fertilidad del suelo' },
   { key: 'erosion', label: 'Protección contra erosión', icon: '🛡️', hint: 'Menos suelo perdido' },
-  { key: 'margen', label: 'Margen', icon: '💰', hint: 'Ganancia esperada' },
 ];
 
-// Semáforo: verde >= 70, amarillo/rojo según valor
-function semaforo(v) {
-  if (v >= 70) return { clase: 'verde', texto: 'Saludable' };
-  if (v >= 45) return { clase: 'ambar', texto: 'Regular' };
-  return { clase: 'rojo', texto: 'En riesgo' };
+// Semáforo por estado textual (sin porcentajes)
+function semaforo(estado) {
+  const e = String(estado).toLowerCase();
+  if (e.includes('saludable') || e.includes('muy buena') || e.includes('alta')) return { clase: 'verde' };
+  if (e.includes('riesgo') || e.includes('baja') || e.includes('deficitaria')) return { clase: 'rojo' };
+  return { clase: 'ambar' };
 }
 
 function enRango(mes, desde, hasta) {
@@ -48,39 +48,37 @@ function mesesDesnudos(secuencia) {
   };
 }
 
-function Medidor({ valor }) {
-  const s = semaforo(valor);
-  const r = 52;
-  const circ = Math.PI * r; // semicírculo
+function Medidor({ estado }) {
+  const s = semaforo(estado);
+  // Largo de la barra solo como indicador visual (sin mostrar número ni %)
+  const ancho = s.clase === 'verde' ? 85 : s.clase === 'ambar' ? 55 : 30;
   return (
-    <div className={`medidor ${s.clase}`} role="img" aria-label={`Salud del suelo ${valor}%, ${s.texto}`}>
-      <svg viewBox="0 0 120 70">
-        <path d="M8 62 A52 52 0 0 1 112 62" className="medidor-fondo" />
-        <path
-          d="M8 62 A52 52 0 0 1 112 62"
-          className="medidor-valor"
-          strokeDasharray={`${(circ * valor) / 100} ${circ}`}
-        />
-      </svg>
-      <div className="medidor-num">{valor}%</div>
-      <span className={`insignia ${s.clase}`}>{s.texto}</span>
+    <div className={`medidor ${s.clase}`} role="img" aria-label={`Salud del suelo: ${estado}`}>
+      <div className="medidor-cab">
+        <span className="medidor-titulo">Salud del suelo</span>
+        <span className={`estado-chip ${s.clase}`}>{estado}</span>
+      </div>
+      <div className="medidor-pista">
+        <div className="medidor-valor" style={{ width: `${ancho}%` }} />
+      </div>
     </div>
   );
 }
 
 function Barrita({ icon, label, valor, hint }) {
-  const s = semaforo(valor);
+  const texto = String(valor);
+  const i = texto.indexOf(':');
+  const titulo = i > -1 ? texto.slice(0, i) : texto;
+  const detalle = i > -1 ? texto.slice(i + 1).trim() : '';
   return (
     <div className="barrita" title={hint}>
       <div className="barrita-top">
-        <span>
-          {icon} {label}
+        <span className="barrita-label">
+          <span aria-hidden="true">{icon}</span> {label}
         </span>
-        <strong>{valor}</strong>
+        <strong className={`estado-chip ${semaforo(texto).clase}`}>{titulo}</strong>
       </div>
-      <div className="barrita-pista">
-        <div className={`barrita-relleno ${s.clase}`} style={{ width: `${valor}%` }} />
-      </div>
+      {detalle && <p className="barrita-detalle">{detalle}</p>}
     </div>
   );
 }
@@ -107,14 +105,16 @@ function TarjetaEstrategia({ e, activa, onElegir }) {
         <h3>{e.nombre}</h3>
         {e.is_current ? <span className="insignia azul">Tu situación actual</span> : <span className="insignia azul-suave">Alternativa</span>}
       </header>
-      <Medidor valor={e.salud_suelo} />
+      <Medidor estado={e.salud_suelo} />
       <p className="resumen">{e.resumen}</p>
       <h4>Secuencia de cultivos</h4>
       <Secuencia secuencia={e.secuencia} />
-      <h4>Comparación</h4>
-      {METRICAS.map((m) => (
-        <Barrita key={m.key} {...m} valor={e.metricas[m.key]} />
-      ))}
+      <details className="comparacion">
+        <summary>Comparación</summary>
+        {METRICAS.map((m) => (
+          <Barrita key={m.key} {...m} valor={e.metricas[m.key]} />
+        ))}
+      </details>
       <button className="boton" onClick={() => onElegir(e.id)} aria-pressed={activa}>
         {activa ? 'Estrategia seleccionada ✓' : 'Ver en el calendario'}
       </button>

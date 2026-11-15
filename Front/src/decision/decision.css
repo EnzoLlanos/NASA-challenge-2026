@@ -35,17 +35,24 @@
 .tarjetas.selector { grid-template-columns: minmax(260px, 520px); }
 .tarjeta { background: #fffdf7; border: 2px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; }
 .tarjeta.activa { border-color: var(--azul); box-shadow: 0 4px 14px rgba(38,112,201,.15); }
-.tarjeta header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.resumen { color: var(--muted); font-size: 14px; }
+.tarjeta header { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 10px; }
+.resumen { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0 0 4px; }
 
-.medidor { position: relative; text-align: center; margin: 8px auto 10px; width: 170px; }
-.medidor svg { width: 100%; display: block; }
-.medidor path { fill: none; stroke-width: 12; stroke-linecap: round; }
-.medidor-fondo { stroke: #e8ede9; }
-.medidor.verde .medidor-valor { stroke: var(--verde); }
-.medidor.ambar .medidor-valor { stroke: var(--ambar); }
-.medidor.rojo .medidor-valor { stroke: var(--rojo); }
-.medidor-num { position: absolute; left: 0; right: 0; top: 34px; font-size: 28px; font-weight: 700; }
+.medidor { width: 100%; margin: 4px 0 12px; padding: 10px 12px; background: #f6f8f6; border: 1px solid var(--line); border-radius: 10px; }
+.medidor-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
+.medidor-titulo { font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.medidor-pista { height: 12px; background: #e8ede9; border-radius: 99px; overflow: hidden; }
+.medidor-valor { height: 100%; border-radius: 99px; transition: width .4s; }
+.medidor.verde .medidor-valor { background: var(--verde); }
+.medidor.ambar .medidor-valor { background: var(--ambar); }
+.medidor.rojo .medidor-valor { background: var(--rojo); }
+.estado-chip { display: inline-block; padding: 2px 10px; border-radius: 6px; border: 1.5px solid currentColor; font-size: 12px; font-weight: 700; text-transform: capitalize; white-space: normal; max-width: 55%; text-align: center; line-height: 1.25; }
+.estado-chip.verde { background: var(--verde-bg); color: var(--verde); }
+.estado-chip.ambar { background: var(--ambar-bg); color: #8a6500; }
+.estado-chip.rojo { background: var(--rojo-bg); color: var(--rojo); }
+.barrita { min-width: 0; }
+.barrita-detalle { margin: 4px 0 0; font-size: 12px; color: var(--muted); line-height: 1.35; overflow-wrap: anywhere; }
+.barrita-label { font-size: 13px; color: var(--ink); }
 
 .secuencia { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .paso { display: flex; flex-direction: column; padding: 6px 10px; border-radius: 8px; background: var(--verde-bg); border-left: 4px solid var(--verde); }
@@ -53,8 +60,8 @@
 .paso-nombre { font-weight: 600; font-size: 14px; }
 .paso-meses { font-size: 12px; color: var(--muted); }
 
-.barrita { margin-bottom: 8px; }
-.barrita-top { display: flex; justify-content: space-between; font-size: 13px; }
+.barrita { padding: 7px 0; border-bottom: 1px dashed var(--line); }
+.barrita-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 13px; }
 .barrita-pista { height: 10px; background: #eef2ef; border-radius: 99px; overflow: hidden; }
 .barrita-relleno { height: 100%; border-radius: 99px; transition: width .4s; }
 .barrita-relleno.verde { background: var(--verde); }
@@ -119,3 +126,11 @@
 .leyenda { list-style: none; display: flex; flex-wrap: wrap; gap: 14px; padding: 0; margin: 12px 0 0; font-size: 13px; color: var(--muted); }
 .dot { display: inline-block; width: 11px; height: 11px; border-radius: 3px; margin-right: 4px; }
 .dot.verde { background: var(--verde); } .dot.ambar { background: var(--ambar); } .dot.rojo { background: var(--rojo); }
+
+.comparacion { margin-top: 14px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; background: #f6f8f6; }
+.comparacion summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; align-items: center; padding: 10px 0; font-size: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--muted); }
+.comparacion summary::-webkit-details-marker { display: none; }
+.comparacion summary::after { content: '\25BC'; font-size: 10px; transition: transform .2s; }
+.comparacion[open] summary::after { transform: rotate(180deg); }
+.comparacion[open] { padding-bottom: 6px; }
+.comparacion .barrita:last-child { border-bottom: 0; }
