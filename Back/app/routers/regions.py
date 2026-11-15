@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Dict
 from fastapi import APIRouter, status
 from app.schemas.region import (
     RegionSanLuis,
     RegionDetailResponse,
+    RegionFormConfigResponse,
     DelimiterInfoResponse,
     Usuario,
     Tierra,
@@ -15,14 +16,39 @@ router = APIRouter(tags=["Regiones"])
 @router.get(
     "/api/regions",
     response_model=List[RegionDetailResponse],
-    summary="Listar las 3 regiones de San Luis (Norte, Centro y Sur)",
+    summary="Listar las 3 regiones de San Luis (Norte, Centro y Sur) con sus reglas",
 )
 def get_regions():
     """
     Devuelve las 3 regiones productivas de la provincia de San Luis (`norte`, `centro`, `sur`)
-    en reemplazo del mapa abierto, con sus datos agroclimáticos e hídricos de NASA POWER.
+    con sus datos agroclimáticos e hídricos de NASA POWER y sus reglas agronómicas.
     """
     return RegionService.list_regions()
+
+
+@router.get(
+    "/api/regions/form-config",
+    response_model=Dict[str, RegionFormConfigResponse],
+    summary="Obtener la configuración adaptativa del formulario y reglas para las 3 zonas",
+)
+def get_all_regions_form_config():
+    """
+    Devuelve un diccionario indexado por región (`norte`, `centro`, `sur`) con las reglas activas,
+    prioridades sugeridas, cultivos recomendados y la pregunta contextual de cada zona.
+    """
+    return RegionService.get_all_regions_form_configs()
+
+
+@router.get(
+    "/api/regions/{region_id}/form-config",
+    response_model=RegionFormConfigResponse,
+    summary="Obtener configuración de formulario y reglas de una zona específica",
+)
+def get_region_form_config(region_id: RegionSanLuis):
+    """
+    Retorna el diagnóstico climático, condición de campo contextual y reglas de riesgo para la zona elegida.
+    """
+    return RegionService.get_region_form_config(region_id)
 
 
 @router.get(
@@ -45,7 +71,7 @@ def get_san_luis_delimiter():
 )
 def get_region_by_id(region_id: RegionSanLuis):
     """
-    Retorna la información climática, de suelos y cultivos recomendados para la región seleccionada.
+    Retorna la información climática, de suelos, reglas y cultivos recomendados para la región seleccionada.
     """
     return RegionService.get_region_detail(region_id)
 
