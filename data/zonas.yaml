@@ -1,0 +1,74 @@
+# =============================================================================
+# data/zonas.yaml — Zonificación Agroecológica de San Luis (NASA Space Apps 2026)
+# Sustento: NASA POWER (Clima 26 años) + SRTM (Topografía) + FAO GAEZ (Aptitud)
+# =============================================================================
+norte:
+  nombre: Norte (Valle del Conlara / Sierras)
+  fuentes_validacion:
+  - NASA POWER (Agroclimatology 2000-2025)
+  - SRTM 30m (Topografía y Relieve)
+  - FAO GAEZ v4 (Aptitud agroclimática)
+  punto_referencia:
+    lat: -32.35
+    lon: -65.0
+  topografia_srtm:
+    altitud_msnm: 800 - 1200
+    relieve: Serrano y valle intermontano con pendientes moderadas a pronunciadas
+    riesgo_erosion: Erosión hídrica en laderas de desmonte
+  clima_resumen: Zona serrana templada-fría con alta retención hídrica en suelo pero
+    elevado régimen de heladas invernales.
+  estres_hidrico_estival: Bajo (suelo retiene humedad)
+  riesgo_principal: Heladas tardías primaverales y anegamientos en bajos serranos
+  datos_nasa_power_2000_2025:
+    lluvia_mm_anual: 748
+    dias_helada_anual: 34.7
+    dias_calor_35c_anual: 2.8
+    humedad_suelo_raiz_media: 0.597
+    temp_media_c: 14.5
+centro:
+  nombre: Centro (San Luis Capital / Villa Mercedes)
+  fuentes_validacion:
+  - NASA POWER (Agroclimatology 2000-2025)
+  - SRTM 30m (Topografía y Relieve)
+  - FAO GAEZ v4 (Aptitud agroclimática)
+  punto_referencia:
+    lat: -33.3
+    lon: -65.3
+  topografia_srtm:
+    altitud_msnm: 500 - 750
+    relieve: Planicie ondulada agrícola-ganadera de transición
+    riesgo_erosion: Erosión mixta en cuencas frágiles
+  clima_resumen: 'Condiciones promedio de la provincia: régimen térmico moderado,
+    veranos calurosos y humedad de suelo media.'
+  estres_hidrico_estival: Medio
+  riesgo_principal: Olas de calor estivales (≥35°C) durante floración y variabilidad
+    pluviométrica
+  datos_nasa_power_2000_2025:
+    lluvia_mm_anual: 771
+    dias_helada_anual: 14.8
+    dias_calor_35c_anual: 26.3
+    humedad_suelo_raiz_media: 0.413
+    temp_media_c: 17.0
+sur:
+  nombre: Sur (Buena Esperanza / Dpto. Dupuy)
+  fuentes_validacion:
+  - NASA POWER (Agroclimatology 2000-2025)
+  - SRTM 30m (Topografía y Relieve)
+  - FAO GAEZ v4 (Aptitud agroclimática)
+  punto_referencia:
+    lat: -34.7
+    lon: -65.3
+  topografia_srtm:
+    altitud_msnm: 350 - 500
+    relieve: Llanura medanosa baja, suelos de textura arenosa con baja retención hídrica
+    riesgo_erosion: Alta susceptibilidad a erosión eólica sobre suelo desnudo
+  clima_resumen: 'Zona semiárida edáfica: alta evapotranspiración estival, 34 días/año
+    con calor sofocante y suelo con escasa retención.'
+  estres_hidrico_estival: Severo (suelo arenoso + olas de calor)
+  riesgo_principal: Sequía agronómica estival y voladura de médanos en invierno
+  datos_nasa_power_2000_2025:
+    lluvia_mm_anual: 773
+    dias_helada_anual: 15.7
+    dias_calor_35c_anual: 34.0
+    humedad_suelo_raiz_media: 0.326
+    temp_media_c: 16.8
