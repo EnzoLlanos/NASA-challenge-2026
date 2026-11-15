@@ -56,6 +56,58 @@
 
 ---
 
+## 📱 Fase nueva (2026-11-15) — "Reducir % y quitar renta" (doc `roles_y_flujo_trabajo.md`)
+
+Mi rol ahí: **"Especialista en Datos y Visualización"**. Tarea: quitar porcentajes
+y cálculos de ganancia de la UI.
+
+### Commit `8ea1597` — `Front/src/data/mockData.js` (archivo asignado a mí)
+- Eliminado `soilHealthScore: 42/89/76` (3 estrategias)
+- Eliminado el campo `margin` completo
+- Textos con % pasados a lenguaje simple:
+  - `"+35% infiltración"` → `"Mejor infiltración"`
+  - `"+75 kg N/ha"` → `"Aporta nitrógeno al suelo de forma natural"`
+  - `"+20% retención"` → `"Guarda mejor el agua que la soja plantada siempre"`
+  - `"cobertura verde 90% del año"` → `"cubierto casi todo el año"`
+
+### Commit `2d425e7` — `Front/src/decision/` (NO estaba asignado a mí — ver nota abajo)
+Archivos de **Mati** (los hizo como "Bloques 2 y 3"), los toqué con su visto
+bueno implícito por pedido del usuario:
+- `mockSimulation.js`: `salud_suelo: 34` → `'En riesgo'` (texto); `metricas`
+  numéricas (0-100) → descripciones; **eliminada la métrica `margen`** de las 3
+  estrategias; % de evidencia NASA (`18% bajo lo normal`, `70% de la lluvia`)
+  → frases simples
+- `DecisionBoard.jsx`: `Medidor` ya no muestra `34%` → muestra el estado
+  (Saludable/Regular/En riesgo); `Barrita` ya no dibuja barra con ancho en %
+  → solo texto; **`METRICAS` sin la clave `margen` (💰)**; `semaforo()`
+  reescrito para leer estados textuales en vez de números
+- `decision.css`: `.medidor-num` de 28px → 17px (el texto no entra a 28px)
+- `resumen` de las estrategias: "buen margen" → "buen resultado",
+  "renta pareja" → "uso parejo del campo"
+
+**Verificación:** `npm run lint` (2 warnings preexistentes, sin errores) +
+`npm run build` OK (236 kB) + front en 200.
+
+---
+
+## ⚠️ Brecha de asignación encontrada (avisar al equipo)
+
+El archivo `Front/src/decision/` **no estaba asignado a nadie** en
+`roles_y_flujo_trabajo.md`, pero el checklist final pedía:
+> "No hay ningún campo de porcentaje (%) en las estrategias de rotación mostradas"
+
+Ese contenido vivía en `DecisionBoard.jsx` + `mockSimulation.js`, que los hizo
+**Mati** (commits `f6c39b3`, `81d761c`) y ajustó **Topo/Gonzalo** (`22f96ac`).
+Yo lo hice para desbloquear el checklist → **avisar en el checkpoint de la
+hora 2:30** para que gualda actualice el documento de roles.
+
+**Detalle menor pendiente:** en `mockData.js` sigue
+`{ id: "forageProfit", label: "Sumar forraje / renta" }` — es la *prioridad*
+del agricultor (opción de usuario), no un cálculo de renta. Lo dejé a propósito;
+si el equipo quiere, se renombra a "Sumar forraje".
+
+---
+
 ## 🖥️ Entorno (importante — no se olvida)
 
 - **Python NO estaba instalado** en la máquina → lo instalé con winget
