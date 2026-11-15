@@ -187,6 +187,9 @@ function ReglasModal({ isOpen, onClose, regionKey, reglasBackend, amenazaBackend
 }
 
 function TarjetaEstrategia({ e, activa, onElegir, onOpenRules }) {
+  const [openComparacion, setOpenComparacion] = useState(false);
+  const [openRiesgos, setOpenRiesgos] = useState(false);
+
   return (
     <article className={`tarjeta ${activa ? 'activa' : ''}`}>
       <header>
@@ -198,19 +201,37 @@ function TarjetaEstrategia({ e, activa, onElegir, onOpenRules }) {
       <h4>Secuencia de cultivos</h4>
       <Secuencia secuencia={e.secuencia} />
 
-      <details className="comparacion">
-        <summary>Comparación de indicadores</summary>
-        <div className="desplegable-cuerpo">
-          {METRICAS.map((m) => (
-            <Barrita key={m.key} {...m} valor={e.metricas?.[m.key]} />
-          ))}
+      <div className={`acordeon-box comparacion ${openComparacion ? 'abierto' : ''}`}>
+        <button
+          type="button"
+          className="acordeon-summary"
+          onClick={() => setOpenComparacion(!openComparacion)}
+          aria-expanded={openComparacion}
+        >
+          <span>Comparación de indicadores</span>
+          <span className={`acordeon-flecha ${openComparacion ? 'girada' : ''}`}>▼</span>
+        </button>
+        <div className="acordeon-desplegable">
+          <div className="acordeon-inner">
+            {METRICAS.map((m) => (
+              <Barrita key={m.key} {...m} valor={e.metricas?.[m.key]} />
+            ))}
+          </div>
         </div>
-      </details>
+      </div>
 
       {Array.isArray(e.riesgos) && e.riesgos.length > 0 && (
-        <details className="riesgos-box">
-          <summary className="riesgos-summary">
-            <span>⚠️ Riesgos en tu región ({e.riesgos.length})</span>
+        <div className={`acordeon-box riesgos-box ${openRiesgos ? 'abierto' : ''}`}>
+          <div className="riesgos-header-row">
+            <button
+              type="button"
+              className="acordeon-summary riesgos-summary"
+              onClick={() => setOpenRiesgos(!openRiesgos)}
+              aria-expanded={openRiesgos}
+            >
+              <span>⚠️ Riesgos en tu región ({e.riesgos.length})</span>
+              <span className={`acordeon-flecha ${openRiesgos ? 'girada' : ''}`}>▼</span>
+            </button>
             <button
               type="button"
               className="btn-info-rules"
@@ -224,15 +245,17 @@ function TarjetaEstrategia({ e, activa, onElegir, onOpenRules }) {
             >
               ℹ️
             </button>
-          </summary>
-          <div className="desplegable-cuerpo">
-            <ul className="riesgos-lista">
-              {e.riesgos.map((r, idx) => (
-                <li key={idx}>{r}</li>
-              ))}
-            </ul>
           </div>
-        </details>
+          <div className="acordeon-desplegable">
+            <div className="acordeon-inner">
+              <ul className="riesgos-lista">
+                {e.riesgos.map((r, idx) => (
+                  <li key={idx}>{r}</li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
       )}
 
       <button className="boton" onClick={() => onElegir(e.id)} aria-pressed={activa}>
@@ -295,7 +318,6 @@ function Timeline({ estrategia }) {
 
 function EvidenciaNasa({ items }) {
   const [abierto, setAbierto] = useState(false);
-  const itemsList = Array.isArray(items) ? items : [];
 
   return (
     <section className="panel nasa" aria-labelledby="n-titulo">
@@ -308,7 +330,7 @@ function EvidenciaNasa({ items }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h2 id="n-titulo" style={{ margin: 0 }}>🛰️ ¿Qué detectó la NASA en tu lote?</h2>
           <span className="insignia azul-suave" style={{ fontSize: '11px' }}>
-            {itemsList.length} satélites
+            {items.length} satélites
           </span>
         </div>
         <span className="nasa-toggle-icono">
@@ -316,22 +338,20 @@ function EvidenciaNasa({ items }) {
         </span>
       </button>
 
-      <div className={`nasa-desplegable-wrapper ${abierto ? 'abierto' : ''}`}>
-        <div className="nasa-desplegable-content">
-          <div className="nasa-grid">
-            {itemsList.map((it) => (
-              <article key={it.satelite} className={`nasa-card ${it.nivel}`}>
-                <div className="nasa-cab">
-                  <span className={`insignia ${it.nivel}`}>{it.satelite}</span>
-                  <strong>{it.titulo}</strong>
-                </div>
-                <p>{it.texto}</p>
-                <small>{it.dato}</small>
-              </article>
-            ))}
-          </div>
+      {abierto && (
+        <div className="nasa-grid">
+          {items.map((it) => (
+            <article key={it.satelite} className={`nasa-card ${it.nivel}`}>
+              <div className="nasa-cab">
+                <span className={`insignia ${it.nivel}`}>{it.satelite}</span>
+                <strong>{it.titulo}</strong>
+              </div>
+              <p>{it.texto}</p>
+              <small>{it.dato}</small>
+            </article>
+          ))}
         </div>
-      </div>
+      )}
     </section>
   );
 }
