@@ -34,12 +34,10 @@ export const MOCK_SIMULATION_RESULT = {
       tag: "Riesgo Hídrico y Nutricional",
       badgeType: "danger",
       sequence: ["Soja", "Barbecho largo (suelo desnudo)", "Soja"],
-      soilHealthScore: 42,
       metrics: {
         water: "Baja (pérdida por evaporación en barbecho)",
         nutrients: "Deficitaria en N y materia orgánica",
-        erosion: "Alto riesgo en meses ventosos",
-        margin: "Depende 100% de la lluvia de verano"
+        erosion: "Alto riesgo en meses ventosos"
       },
       nasaEvidence: "SMAP y MODIS detectan 4 meses con suelo desnudo y estrés térmico recurrente en floración.",
       localRisk: "Degradación del suelo superficial y compactación."
@@ -50,12 +48,10 @@ export const MOCK_SIMULATION_RESULT = {
       tag: "Recomendada",
       badgeType: "success",
       sequence: ["Trigo / Soja 2da", "Vicia villosa (cobertura)", "Maíz"],
-      soilHealthScore: 89,
       metrics: {
-        water: "+35% infiltración de humedad profunda",
-        nutrients: "+75 kg N/ha aportado biológicamente",
-        erosion: "Mínimo (cobertura verde 90% del año)",
-        margin: "Estable, menor gasto en fertilizantes"
+        water: "Mejor infiltración de humedad profunda",
+        nutrients: "Aporta nitrógeno al suelo de forma natural",
+        erosion: "Mínimo (el suelo queda cubierto casi todo el año)"
       },
       nasaEvidence: "ECOSTRESS y GPM muestran suelo más fresco y mejor absorción de lluvias intensas.",
       localRisk: "Definir fecha de secado de la vicia para no consumir agua del cultivo siguiente."
@@ -66,12 +62,10 @@ export const MOCK_SIMULATION_RESULT = {
       tag: "Doble Propósito",
       badgeType: "info",
       sequence: ["Girasol", "Centeno / Avena forrajera", "Maíz tardío"],
-      soilHealthScore: 76,
       metrics: {
-        water: "+20% retención respecto a soja continua",
+        water: "Guarda mejor el agua que la soja plantada siempre",
         nutrients: "Moderada (buen reciclaje de fósforo)",
-        erosion: "Bajo riesgo con pastoreo controlado",
-        margin: "Renta intermedia con ganado + grano"
+        erosion: "Bajo riesgo con pastoreo controlado"
       },
       nasaEvidence: "NASA POWER registra baja frecuencia de heladas tempranas, ideal para maíz tardío.",
       localRisk: "Retirar la hacienda a tiempo para no compactar suelo húmedo."
