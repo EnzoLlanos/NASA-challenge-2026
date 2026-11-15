@@ -1,8 +1,9 @@
-from typing import List
+from typing import List, Dict
 from fastapi import HTTPException, status
 from app.schemas.region import (
     RegionSanLuis,
     RegionDetailResponse,
+    RegionFormConfigResponse,
     DelimiterInfoResponse,
     Usuario,
     Tierra,
@@ -14,7 +15,8 @@ from app.repositories.region_repository import RegionRepository
 class RegionService:
     """
     Capa de Servicio (Lógica de Negocio) para Regiones de San Luis (Norte, Centro, Sur),
-    validación del delimitador territorial y gestión de Usuarios y sus Tierras.
+    configuración adaptativa del formulario con reglas regionales, validación del delimitador
+    territorial y gestión de Usuarios y sus Tierras.
     """
 
     @staticmethod
@@ -32,6 +34,22 @@ class RegionService:
                 detail=f"La región '{region}' no existe en San Luis. Regiones válidas: norte, centro, sur.",
             )
         return detail
+
+    @staticmethod
+    def get_region_form_config(region: RegionSanLuis) -> RegionFormConfigResponse:
+        """Retorna la configuración adaptativa del formulario y reglas para la región seleccionada."""
+        cfg = RegionRepository.get_form_config_by_region(region)
+        if not cfg:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"No se encontró configuración de formulario para la región '{region}'.",
+            )
+        return cfg
+
+    @staticmethod
+    def get_all_regions_form_configs() -> Dict[str, RegionFormConfigResponse]:
+        """Retorna las configuraciones de formulario y reglas de las 3 regiones de San Luis."""
+        return RegionRepository.get_all_form_configs()
 
     @staticmethod
     def get_delimiter_info() -> DelimiterInfoResponse:

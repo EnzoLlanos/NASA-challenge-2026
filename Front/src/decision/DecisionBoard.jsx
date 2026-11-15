@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useSimulation } from './api.js';
+import { REGION_FORM_CONFIG_FALLBACK } from '../data/mockData.js';
 import './decision.css';
 
 const MESES = ['E', 'F', 'M', 'A', 'M', 'J', 'J', 'A', 'S', 'O', 'N', 'D'];
@@ -9,14 +10,25 @@ const METRICAS = [
   { key: 'agua', label: 'Agua', icon: '💧', hint: 'Uso eficiente del agua' },
   { key: 'nutrientes', label: 'Nutrientes', icon: '🌱', hint: 'Fertilidad del suelo' },
   { key: 'erosion', label: 'Protección contra erosión', icon: '🛡️', hint: 'Menos suelo perdido' },
+  { key: 'margen', label: 'Margen / Renta', icon: '💰', hint: 'Estabilidad comercial' },
 ];
 
-// Semáforo por estado textual (sin porcentajes)
-function semaforo(estado) {
-  const e = String(estado).toLowerCase();
-  if (e.includes('saludable') || e.includes('muy buena') || e.includes('alta')) return { clase: 'verde' };
-  if (e.includes('riesgo') || e.includes('baja') || e.includes('deficitaria')) return { clase: 'rojo' };
-  return { clase: 'ambar' };
+// Semáforo compatible tanto con puntaje numérico (0-100) como con estado textual
+function semaforo(valor) {
+  if (typeof valor === 'number' || (!Number.isNaN(Number(valor)) && String(valor).trim() !== '')) {
+    const num = Number(valor);
+    if (num >= 70) return { clase: 'verde', texto: 'Saludable', pct: num };
+    if (num >= 45) return { clase: 'ambar', texto: 'Regular', pct: num };
+    return { clase: 'rojo', texto: 'En riesgo', pct: num };
+  }
+  const e = String(valor || '').toLowerCase();
+  if (e.includes('saludable') || e.includes('muy buena') || e.includes('alta') || e.includes('mejor')) {
+    return { clase: 'verde', texto: String(valor), pct: 85 };
+  }
+  if (e.includes('riesgo') || e.includes('baja') || e.includes('deficitaria')) {
+    return { clase: 'rojo', texto: String(valor), pct: 30 };
+  }
+  return { clase: 'ambar', texto: String(valor || 'Regular'), pct: 55 };
 }
 
 function enRango(mes, desde, hasta) {
@@ -50,22 +62,46 @@ function mesesDesnudos(secuencia) {
 
 function Medidor({ estado }) {
   const s = semaforo(estado);
-  // Largo de la barra solo como indicador visual (sin mostrar número ni %)
-  const ancho = s.clase === 'verde' ? 85 : s.clase === 'ambar' ? 55 : 30;
+  const esNumero = typeof estado === 'number';
+  const etiqueta = esNumero ? `${s.texto} (${estado}/100)` : s.texto;
+
   return (
-    <div className={`medidor ${s.clase}`} role="img" aria-label={`Salud del suelo: ${estado}`}>
+    <div className={`medidor ${s.clase}`} role="img" aria-label={`Salud del suelo: ${etiqueta}`}>
       <div className="medidor-cab">
         <span className="medidor-titulo">Salud del suelo</span>
-        <span className={`estado-chip ${s.clase}`}>{estado}</span>
+        <span className={`estado-chip ${s.clase}`}>{etiqueta}</span>
       </div>
       <div className="medidor-pista">
-        <div className="medidor-valor" style={{ width: `${ancho}%` }} />
+        <div className="medidor-valor" style={{ width: `${s.pct}%` }} />
       </div>
     </div>
   );
 }
 
 function Barrita({ icon, label, valor, hint }) {
+  if (valor === undefined || valor === null) return null;
+  const esNumero = typeof valor === 'number' || (!Number.isNaN(Number(valor)) && String(valor).trim() !== '');
+  const s = semaforo(valor);
+
+  if (esNumero) {
+    const num = Number(valor);
+    return (
+      <div className="barrita" title={hint}>
+        <div className="barrita-top">
+          <span className="barrita-label">
+            <span aria-hidden="true">{icon}</span> {label}
+          </span>
+          <strong className={`estado-chip ${s.clase}`}>
+            {s.texto} · {num}
+          </strong>
+        </div>
+        <div className="barrita-pista" style={{ marginTop: '6px' }}>
+          <div className={`barrita-relleno ${s.clase}`} style={{ width: `${num}%` }} />
+        </div>
+      </div>
+    );
+  }
+
   const texto = String(valor);
   const i = texto.indexOf(':');
   const titulo = i > -1 ? texto.slice(0, i) : texto;
@@ -76,7 +112,7 @@ function Barrita({ icon, label, valor, hint }) {
         <span className="barrita-label">
           <span aria-hidden="true">{icon}</span> {label}
         </span>
-        <strong className={`estado-chip ${semaforo(texto).clase}`}>{titulo}</strong>
+        <strong className={`estado-chip ${s.clase}`}>{titulo}</strong>
       </div>
       {detalle && <p className="barrita-detalle">{detalle}</p>}
     </div>
@@ -98,7 +134,60 @@ function Secuencia({ secuencia }) {
   );
 }
 
-function TarjetaEstrategia({ e, activa, onElegir }) {
+function ReglasModal({ isOpen, onClose, regionKey, reglasBackend, amenazaBackend }) {
+  if (!isOpen) return null;
+
+  const fallbackMeta = REGION_FORM_CONFIG_FALLBACK[regionKey] || REGION_FORM_CONFIG_FALLBACK.centro;
+  const reglas =
+    Array.isArray(reglasBackend) && reglasBackend.length > 0
+      ? reglasBackend
+      : fallbackMeta.reglas_activas;
+  const amenaza = amenazaBackend || fallbackMeta.amenaza_principal;
+
+  return (
+    <div className="rules-modal-overlay" onClick={onClose}>
+      <div className="rules-modal-card" onClick={(e) => e.stopPropagation()}>
+        <div className="rules-modal-header">
+          <div>
+            <h3>
+              {fallbackMeta.icono_alerta} Diagnóstico NASA · {fallbackMeta.nombre}
+            </h3>
+            <p>{fallbackMeta.subtitulo_clima}</p>
+          </div>
+          <button
+            type="button"
+            className="rules-modal-close"
+            onClick={onClose}
+            aria-label="Cerrar reglas"
+          >
+            ✕
+          </button>
+        </div>
+
+        <div className="rules-modal-threat">
+          <strong>Amenaza principal de la zona:</strong> {amenaza}
+        </div>
+
+        <div className="rules-modal-list">
+          {reglas.map((r) => (
+            <div key={r.codigo} className="rules-modal-item">
+              <div className="rules-modal-item-top">
+                <span className="rules-code-badge">{r.codigo}</span>
+                <strong>{r.nombre}</strong>
+              </div>
+              <p className="rules-modal-impact">{r.impacto_metricas}</p>
+              {r.factor_climatico && (
+                <small className="rules-modal-factor">📡 Dato NASA: {r.factor_climatico}</small>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function TarjetaEstrategia({ e, activa, onElegir, onOpenRules }) {
   return (
     <article className={`tarjeta ${activa ? 'activa' : ''}`}>
       <header>
@@ -109,12 +198,40 @@ function TarjetaEstrategia({ e, activa, onElegir }) {
       <p className="resumen">{e.resumen}</p>
       <h4>Secuencia de cultivos</h4>
       <Secuencia secuencia={e.secuencia} />
+
       <details className="comparacion">
-        <summary>Comparación</summary>
+        <summary>Comparación de indicadores</summary>
         {METRICAS.map((m) => (
-          <Barrita key={m.key} {...m} valor={e.metricas[m.key]} />
+          <Barrita key={m.key} {...m} valor={e.metricas?.[m.key]} />
         ))}
       </details>
+
+      {Array.isArray(e.riesgos) && e.riesgos.length > 0 && (
+        <details className="riesgos-box">
+          <summary className="riesgos-summary">
+            <span>⚠️ Riesgos en tu región ({e.riesgos.length})</span>
+            <button
+              type="button"
+              className="btn-info-rules"
+              onClick={(ev) => {
+                ev.preventDefault();
+                ev.stopPropagation();
+                onOpenRules();
+              }}
+              title="Ver diagnóstico NASA y reglas activas de tu región"
+              aria-label="Ver reglas de la región"
+            >
+              ℹ️
+            </button>
+          </summary>
+          <ul className="riesgos-lista">
+            {e.riesgos.map((r, idx) => (
+              <li key={idx}>{r}</li>
+            ))}
+          </ul>
+        </details>
+      )}
+
       <button className="boton" onClick={() => onElegir(e.id)} aria-pressed={activa}>
         {activa ? 'Estrategia seleccionada ✓' : 'Ver en el calendario'}
       </button>
@@ -234,21 +351,31 @@ export default function DecisionBoard({ simulacion, params, isLoading: propLoadi
 
   const [sel, setSel] = useState(null);
   const [vista, setVista] = useState('lado'); // 'lado' | 'selector'
+  const [isRulesModalOpen, setIsRulesModalOpen] = useState(false);
 
   const estrategias = sim?.estrategias || [];
   const seleccionada = estrategias.find((e) => e.id === sel) ?? estrategias[0];
   const visibles = vista === 'lado' ? estrategias : [seleccionada].filter(Boolean);
   const nombreLote = sim?.lote?.nombre || sim?.tierra_nombre || 'Campo en San Luis';
+  const activeRegionKey = sim?.lote?.region || params?.region || params?.zona || 'centro';
+  const amenazaRegional = sim?.lote?.amenaza_regional;
 
   return (
     <div className="decision">
-      {isMock && <div className="mock-tag">Datos de ejemplo (simulación mock)</div>}
-      {estaCargando && <p className="sub">Calculando estrategias con datos NASA…</p>}
+      {isMock && <div className="mock-tag">Datos de ejemplo (seleccioná tu región y tocá Simular Rotaciones)</div>}
+      {estaCargando && <p className="sub">Calculando estrategias y aplicando reglas regionales con datos NASA…</p>}
       <AvisoAgronomo />
 
       <section aria-labelledby="c-titulo">
         <div className="barra-titulo">
-          <h2 id="c-titulo">Comparador de estrategias — {nombreLote}</h2>
+          <div>
+            <h2 id="c-titulo">Comparador de 3 estrategias — {nombreLote}</h2>
+            {amenazaRegional && (
+              <p className="sub" style={{ marginTop: 4, marginBottom: 0, fontSize: '13px' }}>
+                🎯 <strong>Amenaza regional evaluada:</strong> {amenazaRegional}
+              </p>
+            )}
+          </div>
           <div className="selector" role="group" aria-label="Modo de vista">
             <button className={vista === 'lado' ? 'on' : ''} onClick={() => setVista('lado')}>Lado a lado</button>
             <button className={vista === 'selector' ? 'on' : ''} onClick={() => setVista('selector')}>Una por una</button>
@@ -260,8 +387,8 @@ export default function DecisionBoard({ simulacion, params, isLoading: propLoadi
               <button
                 key={e.id}
                 role="tab"
-                aria-selected={e.id === seleccionada.id}
-                className={e.id === seleccionada.id ? 'on' : ''}
+                aria-selected={seleccionada && e.id === seleccionada.id}
+                className={seleccionada && e.id === seleccionada.id ? 'on' : ''}
                 onClick={() => setSel(e.id)}
               >
                 {e.nombre}
@@ -271,13 +398,27 @@ export default function DecisionBoard({ simulacion, params, isLoading: propLoadi
         )}
         <div className={`tarjetas ${vista}`}>
           {visibles.map((e) => (
-            <TarjetaEstrategia key={e.id} e={e} activa={e.id === seleccionada.id} onElegir={setSel} />
+            <TarjetaEstrategia
+              key={e.id}
+              e={e}
+              activa={seleccionada && e.id === seleccionada.id}
+              onElegir={setSel}
+              onOpenRules={() => setIsRulesModalOpen(true)}
+            />
           ))}
         </div>
       </section>
 
       {seleccionada && <Timeline estrategia={seleccionada} />}
       <EvidenciaNasa items={sim?.evidencia_nasa || []} />
+
+      <ReglasModal
+        isOpen={isRulesModalOpen}
+        onClose={() => setIsRulesModalOpen(false)}
+        regionKey={activeRegionKey}
+        reglasBackend={sim?.reglas_regionales}
+        amenazaBackend={amenazaRegional}
+      />
     </div>
   );
 }

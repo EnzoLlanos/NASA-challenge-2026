@@ -1,6 +1,9 @@
 import ConfigForm from "./ConfigForm";
 
-export default function Sidebar({ config, onConfigChange, onSimulate, isLoading }) {
+export default function Sidebar({ config, onChange, onConfigChange, onSubmit, onSimulate, isLoading }) {
+  const handleChange = onChange || onConfigChange;
+  const handleSubmit = onSubmit || onSimulate;
+
   return (
     <aside className="sidebar-panel">
       <header className="sidebar-header">
@@ -11,7 +14,7 @@ export default function Sidebar({ config, onConfigChange, onSimulate, isLoading 
         </div>
       </header>
 
-      <ConfigForm config={config} onChange={onConfigChange} onSubmit={onSimulate} isLoading={isLoading} />
+      <ConfigForm config={config} onChange={handleChange} onSubmit={handleSubmit} isLoading={isLoading} />
 
       <footer style={{ marginTop: "auto", paddingTop: 12, borderTop: "1.5px solid #c8deef" }}>
         <p style={{ margin: 0, fontSize: "0.74rem", color: "#3b628a", textAlign: "center", fontWeight: "600" }}>
