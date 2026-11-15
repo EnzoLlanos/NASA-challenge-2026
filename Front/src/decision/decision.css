@@ -45,7 +45,7 @@
 .medidor.verde .medidor-valor { stroke: var(--verde); }
 .medidor.ambar .medidor-valor { stroke: var(--ambar); }
 .medidor.rojo .medidor-valor { stroke: var(--rojo); }
-.medidor-num { position: absolute; left: 0; right: 0; top: 34px; font-size: 28px; font-weight: 700; }
+.medidor-num { position: absolute; left: 0; right: 0; top: 34px; font-size: 17px; font-weight: 700; }
 
 .secuencia { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
 .paso { display: flex; flex-direction: column; padding: 6px 10px; border-radius: 8px; background: var(--verde-bg); border-left: 4px solid var(--verde); }
