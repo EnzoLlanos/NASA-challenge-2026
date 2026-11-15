@@ -221,7 +221,7 @@ export default function ConfigForm({ config, onChange, onSubmit, isLoading }) {
         </div>
 
         <button type="submit" className={`btn-simulate ${isLoading ? "loading" : ""}`} disabled={isLoading}>
-          {isLoading ? "⏳ Consultando datos NASA..." : "🚀 Simular Rotaciones"}
+          {isLoading ? "⏳ Consultando datos NASA..." : "🚀 Simula tu rotación"}
         </button>
       </form>
 
