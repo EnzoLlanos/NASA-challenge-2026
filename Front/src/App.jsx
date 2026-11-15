@@ -7,6 +7,7 @@ import DecisionBoard from "./decision/DecisionBoard.jsx";
 export default function App() {
   // Estado de configuración del lote (Dev 1)
   const [config, setConfig] = useState({
+    zona: "centro",
     coords: SAMPLE_LOT_SAN_LUIS.coords,
     currentCrop: "Soja",
     irrigation: "lluvia",

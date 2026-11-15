@@ -31,7 +31,19 @@ class ScoringEngine:
     _yaml_path: Optional[Path] = None
 
     @classmethod
-    def _find_crops_yaml(cls) -> Optional[Path]:
+    def _find_crops_yaml(cls, zona_key: Optional[str] = None) -> Optional[Path]:
+        if zona_key:
+            posibles_rutas_zona = [
+                Path(f"data/zonas/crops_{zona_key}.yaml"),
+                Path(f"../data/zonas/crops_{zona_key}.yaml"),
+                Path(f"../../data/zonas/crops_{zona_key}.yaml"),
+                Path(__file__).resolve().parents[3] / "data" / "zonas" / f"crops_{zona_key}.yaml",
+                Path(__file__).resolve().parents[2] / "data" / "zonas" / f"crops_{zona_key}.yaml",
+            ]
+            for p in posibles_rutas_zona:
+                if p.is_file():
+                    return p
+
         if cls._yaml_path and cls._yaml_path.exists():
             return cls._yaml_path
 
@@ -51,14 +63,14 @@ class ScoringEngine:
     @classmethod
     def load_crops_for_zone(cls, zona: ZonaSanLuis = ZonaSanLuis.CENTRO) -> Dict[str, CropInfo]:
         """
-        Lee el archivo data/crops.yaml y entrega los cultivos adaptados a la zona seleccionada.
-        Soporta tanto un YAML organizado por zonas (norte/centro/sur) como un archivo plano.
+        Lee el archivo data/crops.yaml o data/zonas/crops_{zona}.yaml adaptado a la zona seleccionada.
+        Soporta tanto un YAML organizado por zonas como archivos individuales por zona.
         """
         zona_key = zona.value if isinstance(zona, ZonaSanLuis) else str(zona).lower()
         if zona_key in cls._cached_crops_by_zone:
             return cls._cached_crops_by_zone[zona_key]
 
-        yaml_file = cls._find_crops_yaml()
+        yaml_file = cls._find_crops_yaml(zona_key)
         raw_dict = {}
         if yaml_file:
             try:
@@ -215,46 +227,46 @@ class ScoringEngine:
 
         # 3. Contexto agroclimático según la zona de San Luis
         if zona == ZonaSanLuis.NORTE:
-            nombre_zona = "Zona Norte de San Luis"
-            lluvia_contexto = "Lluvias estivales moderadas y veranos muy calurosos (más de 30 días de calor extremo)."
-            estrategia_rec_nombre = f"{cultivo_actual_clean} → Sorgo granífero → Vicia de cobertura"
+            nombre_zona = "Zona Norte de San Luis (Valle del Conlara / Sierras)"
+            lluvia_contexto = "Clima templado-serrano con buena humedad de suelo (0.60) pero 35 días de heladas al año."
+            estrategia_rec_nombre = f"{cultivo_actual_clean} → Arveja / Vicia → Maíz"
             secuencia_rec = [
                 SecuenciaItem(cultivo=cultivo_actual_clean, tipo="cultivo", desde=11, hasta=4, meses_texto="Noviembre a Abril"),
-                SecuenciaItem(cultivo="Vicia (cobertura)", tipo="cobertura", desde=5, hasta=9, meses_texto="Mayo a Septiembre"),
-                SecuenciaItem(cultivo="Sorgo granífero", tipo="cultivo", desde=10, hasta=3, meses_texto="Octubre a Marzo"),
+                SecuenciaItem(cultivo="Arveja / Vicia (cobertura)", tipo="cobertura", desde=5, hasta=9, meses_texto="Mayo a Septiembre"),
+                SecuenciaItem(cultivo="Maíz de ciclo completo", tipo="cultivo", desde=10, hasta=4, meses_texto="Octubre a Abril"),
             ]
-            rec_agua = "Excelente retención de humedad frente a las altas temperaturas del norte"
-            rec_nutrientes = "Aporte biológico de nitrógeno que enriquece el suelo arenoso"
-            rec_erosion = "El rastrojo abundante frena la voladura de tierra por viento"
-            rec_salida = "Cereal rústico de alta seguridad para forraje o grano"
+            rec_agua = "El suelo del valle retiene buena humedad radicular (0.60 según NASA POWER)"
+            rec_nutrientes = "La leguminosa de invierno fija nitrógeno y reduce fertilización química"
+            rec_erosion = "La cobertura densa protege las laderas de la erosión hídrica por lluvias serranas"
+            rec_salida = "Excelente colocación de grano y ahorro en fertilizantes"
             nasa_evidencia_rec = (
-                "Satélites NASA POWER registran que el sorgo mantiene la planta activa aún en picos de calor >35°C, "
-                "mientras que la cobertura viva evita que el suelo se caliente y pierda humedad en invierno."
+                "Satélites NASA POWER registran baja incidencia de calor extremo (<3 días/año ≥35°C) y buena humedad edáfica, "
+                "pero advierten riesgo de heladas tardías en primavera sobre las sierras."
             )
-            riesgo_rec = "Definir con el asesor local la fecha justa de secado de la cobertura antes de sembrar el sorgo."
+            riesgo_rec = "Monitorear pronóstico de heladas tardías en octubre antes de sembrar maíz temprano."
 
         elif zona == ZonaSanLuis.SUR:
-            nombre_zona = "Zona Sur de San Luis (Llanura medanosa)"
-            lluvia_contexto = "Suelos arenosos y profundos con riesgo alto de voladura por vientos de primavera y heladas invernales."
-            estrategia_rec_nombre = f"{cultivo_actual_clean} → Centeno / Vicia → Girasol"
+            nombre_zona = "Zona Sur de San Luis (Llanura medanosa / Buena Esperanza)"
+            lluvia_contexto = "Suelos arenosos con baja retención hídrica y veranos con 34 días de calor sofocante (≥35°C)."
+            estrategia_rec_nombre = f"{cultivo_actual_clean} → Centeno / Cebada → Sorgo granífero"
             secuencia_rec = [
                 SecuenciaItem(cultivo=cultivo_actual_clean, tipo="cultivo", desde=11, hasta=4, meses_texto="Noviembre a Abril"),
-                SecuenciaItem(cultivo="Centeno (cobertura/forraje)", tipo="cobertura", desde=5, hasta=9, meses_texto="Mayo a Septiembre"),
-                SecuenciaItem(cultivo="Girasol", tipo="cultivo", desde=10, hasta=3, meses_texto="Octubre a Marzo"),
+                SecuenciaItem(cultivo="Centeno / Cebada (cobertura)", tipo="cobertura", desde=5, hasta=9, meses_texto="Mayo a Septiembre"),
+                SecuenciaItem(cultivo="Sorgo granífero (raíz profunda)", tipo="cultivo", desde=10, hasta=3, meses_texto="Octubre a Marzo"),
             ]
-            rec_agua = "La raíz profunda del girasol aprovecha el agua de las capas inferiores del médano"
-            rec_nutrientes = "Buen reciclaje de nutrientes y protección de la poca materia orgánica superficial"
-            rec_erosion = "El centeno cubre el suelo en los meses más ventosos del año (invierno y primavera)"
-            rec_salida = "Excelente demanda aceitera y opción de pastoreo liviano en invierno"
+            rec_agua = "El sorgo consume 40% menos agua y sus raíces de 200 cm buscan humedad profunda"
+            rec_nutrientes = "Aporte continuo de rastrojo que regenera la materia orgánica en suelos arenosos"
+            rec_erosion = "El centeno cubre el suelo en los meses ventosos de invierno evitando voladuras de médanos"
+            rec_salida = "Grano y forraje rústico de alta demanda ganadera en el sur provincial"
             nasa_evidencia_rec = (
-                "Registros de viento y radiación NASA POWER indican que los meses de julio a octubre presentan "
-                "el mayor peligro de erosión eólica en el sur si el suelo queda descubierto."
+                "NASA POWER y SMAP detectan 34 días/año con calor ≥35°C y baja humedad radicular (0.32). "
+                "El sorgo es el cultivo más resiliente para evitar el estrés hídrico estival."
             )
-            riesgo_rec = "Monitorear heladas tardías en primavera al momento de implantar el girasol."
+            riesgo_rec = "Evitar dejar el suelo desnudo en agosto y septiembre por fuertes vientos y voladuras."
 
         else:  # CENTRO
-            nombre_zona = "Zona Centro de San Luis (Valle y transición)"
-            lluvia_contexto = "Zona agrícola principal con lluvias concentradas en verano y suelos con pendiente hacia cuencas."
+            nombre_zona = "Zona Centro de San Luis (Capital / Villa Mercedes)"
+            lluvia_contexto = "Planicie agrícola intermedia con régimen moderado de calor y heladas."
             estrategia_rec_nombre = f"Maíz → Soja → Cultivo de cobertura (Vicia / Centeno)"
             secuencia_rec = [
                 SecuenciaItem(cultivo="Maíz", tipo="cultivo", desde=10, hasta=3, meses_texto="Octubre a Marzo"),

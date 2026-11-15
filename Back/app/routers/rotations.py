@@ -21,21 +21,24 @@ def get_zones():
     return [
         {
             "id": "norte",
-            "nombre": "Zona Norte (San Luis)",
-            "descripcion": "Veranos calurosos y secos. Requiere cultivos rústicos como sorgo y buena cobertura.",
-            "cultivo_principal": "Sorgo granífero / Maíz con riego",
+            "nombre": "Zona Norte (Valle del Conlara / Sierras)",
+            "descripcion": "Clima serrano templado con buena humedad de suelo (0.60) pero 35 días de heladas al año. Prioridad: maíz, soja y leguminosas de cobertura.",
+            "cultivo_principal": "Maíz / Soja / Arveja (cobertura)",
+            "coords": {"lat": -32.35, "lng": -65.00},
         },
         {
             "id": "centro",
-            "nombre": "Zona Centro (San Luis)",
-            "descripcion": "Región núcleo de valles y cuencas. Rotación balanceada maíz-soja con cobertura de invierno.",
-            "cultivo_principal": "Maíz / Soja / Trigo",
+            "nombre": "Zona Centro (Capital / Villa Mercedes)",
+            "descripcion": "Región agrícola central con lluvias concentradas en verano. Rotación balanceada maíz-soja con cobertura invernal.",
+            "cultivo_principal": "Maíz / Soja / Trigo / Vicia",
+            "coords": {"lat": -33.30, "lng": -65.30},
         },
         {
             "id": "sur",
-            "nombre": "Zona Sur (San Luis)",
-            "descripcion": "Suelos arenosos (médanos) con vientos fuertes. Prioridad proteger el suelo y raíces profundas.",
-            "cultivo_principal": "Girasol / Centeno forrajero",
+            "nombre": "Zona Sur (Buena Esperanza / Dupuy)",
+            "descripcion": "Suelos arenosos medanosos con 34 días de calor sofocante (≥35°C) y baja retención de agua. Prioridad: sorgo rústico, girasol y centeno contra viento.",
+            "cultivo_principal": "Sorgo granífero / Girasol / Centeno",
+            "coords": {"lat": -34.70, "lng": -65.30},
         },
     ]
 

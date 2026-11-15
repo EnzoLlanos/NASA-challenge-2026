@@ -10,10 +10,32 @@ export const SAMPLE_LOT_SAN_LUIS = {
   priorities: { water: true, nutrients: true, erosion: true, forageProfit: false }
 };
 
+export const ZONE_OPTIONS = [
+  {
+    value: "centro",
+    label: "🟡 Centro (Capital / Villa Mercedes)",
+    desc: "Valle central y transición. Humedad intermedia y lluvias estivales.",
+    coords: { lat: -33.30, lng: -65.30 }
+  },
+  {
+    value: "norte",
+    label: "🟢 Norte (Valle del Conlara / Sierras)",
+    desc: "Clima serrano: suelo húmedo (0.60) pero 35 días de heladas al año.",
+    coords: { lat: -32.35, lng: -65.00 }
+  },
+  {
+    value: "sur",
+    label: "🟠 Sur (Buena Esperanza / Dupuy)",
+    desc: "Llanura medanosa: suelo arenoso y 34 días de calor extremo (≥35°C).",
+    coords: { lat: -34.70, lng: -65.30 }
+  }
+];
+
 export const CROP_OPTIONS = [
   { value: "Soja", label: "🌱 Soja" },
   { value: "Maíz", label: "🌽 Maíz" },
   { value: "Trigo", label: "🌾 Trigo" },
+  { value: "Sorgo", label: "🌾 Sorgo granífero" },
   { value: "Girasol", label: "🌻 Girasol" }
 ];
 

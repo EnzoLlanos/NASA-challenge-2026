@@ -1,15 +1,20 @@
 import { useEffect, useState } from 'react';
-import { mockSimulation } from './mockSimulation.js';
+import { getSimulationForParams, mockSimulation } from './mockSimulation.js';
 
 // Cuando el backend exponga el objeto de simulación, definir VITE_SIM_URL
 // (ej: http://localhost:3000/api/simulation). Si falla, usa el mock.
 export function useSimulation(params) {
-  const [state, setState] = useState({ data: mockSimulation, loading: false, mock: true });
+  const initialData = getSimulationForParams(params);
+  const [state, setState] = useState({ data: initialData, loading: false, mock: true });
   const key = JSON.stringify(params ?? {});
 
   useEffect(() => {
+    const fallback = getSimulationForParams(params);
     const url = import.meta.env.VITE_SIM_URL;
-    if (!url) return;
+    if (!url) {
+      setState({ data: fallback, loading: false, mock: true });
+      return;
+    }
     let cancel = false;
     setState((s) => ({ ...s, loading: true }));
     fetch(url, {
@@ -19,7 +24,7 @@ export function useSimulation(params) {
     })
       .then((r) => (r.ok ? r.json() : Promise.reject(r.status)))
       .then((data) => !cancel && setState({ data, loading: false, mock: false }))
-      .catch(() => !cancel && setState({ data: mockSimulation, loading: false, mock: true }));
+      .catch(() => !cancel && setState({ data: fallback, loading: false, mock: true }));
     return () => {
       cancel = true;
     };

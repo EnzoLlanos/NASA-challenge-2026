@@ -1,4 +1,4 @@
-import { CROP_OPTIONS, PRIORITY_OPTIONS } from "../../data/mockData";
+import { ZONE_OPTIONS, CROP_OPTIONS, PRIORITY_OPTIONS } from "../../data/mockData";
 
 export default function ConfigForm({ config, onChange, onSubmit, isLoading }) {
   const togglePriority = (id) =>
@@ -12,6 +12,28 @@ export default function ConfigForm({ config, onChange, onSubmit, isLoading }) {
         onSubmit();
       }}
     >
+      <div className="form-group">
+        <label htmlFor="zone-select" className="form-label">📍 Zona de San Luis</label>
+        <select
+          id="zone-select"
+          className="form-select"
+          value={config.zona || "centro"}
+          onChange={(e) => {
+            const z = ZONE_OPTIONS.find((opt) => opt.value === e.target.value);
+            onChange({
+              ...config,
+              zona: e.target.value,
+              coords: z ? z.coords : config.coords,
+              lotName: z ? `Campo en ${z.label}` : config.lotName
+            });
+          }}
+        >
+          {ZONE_OPTIONS.map((z) => (
+            <option key={z.value} value={z.value}>{z.label}</option>
+          ))}
+        </select>
+      </div>
+
       <div className="form-group">
         <label htmlFor="crop-select" className="form-label">🌾 ¿Qué venís sembrando?</label>
         <select
@@ -27,23 +49,16 @@ export default function ConfigForm({ config, onChange, onSubmit, isLoading }) {
       </div>
 
       <div className="form-group">
-        <span className="form-label">💧 Régimen de agua</span>
-        <div className="pill-group">
-          <button
-            type="button"
-            className={`pill-btn ${config.irrigation === "lluvia" ? "active" : ""}`}
-            onClick={() => onChange({ ...config, irrigation: "lluvia" })}
-          >
-            🌧️ Solo lluvia
-          </button>
-          <button
-            type="button"
-            className={`pill-btn ${config.irrigation === "riego" ? "active" : ""}`}
-            onClick={() => onChange({ ...config, irrigation: "riego" })}
-          >
-            🚿 Con riego
-          </button>
-        </div>
+        <label htmlFor="irrigation-select" className="form-label">💧 ¿Cómo recibe agua el lote?</label>
+        <select
+          id="irrigation-select"
+          className="form-select"
+          value={config.irrigation || "lluvia"}
+          onChange={(e) => onChange({ ...config, irrigation: e.target.value })}
+        >
+          <option value="lluvia">🌧️ Solo lluvia (secano)</option>
+          <option value="riego">🚿 Con equipo de riego</option>
+        </select>
       </div>
 
       <div className="form-group">
