@@ -12,22 +12,22 @@ const METRICAS = [
   { key: 'erosion', label: 'Protección contra erosión', icon: '🛡️', hint: 'Menos suelo perdido' },
 ];
 
-// Semáforo compatible tanto con puntaje numérico (0-100) como con estado textual
+// Semáforo por estado cualitativo (sin números ni porcentajes)
 function semaforo(valor) {
   if (typeof valor === 'number' || (!Number.isNaN(Number(valor)) && String(valor).trim() !== '')) {
     const num = Number(valor);
-    if (num >= 70) return { clase: 'verde', texto: 'Saludable', pct: num };
-    if (num >= 45) return { clase: 'ambar', texto: 'Regular', pct: num };
-    return { clase: 'rojo', texto: 'En riesgo', pct: num };
+    if (num >= 70) return { clase: 'verde', texto: 'Estable', pct: 85 };
+    if (num >= 45) return { clase: 'ambar', texto: 'Regular', pct: 55 };
+    return { clase: 'rojo', texto: 'En riesgo', pct: 30 };
   }
   const e = String(valor || '').toLowerCase();
-  if (e.includes('saludable') || e.includes('muy buena') || e.includes('alta') || e.includes('mejor')) {
-    return { clase: 'verde', texto: String(valor), pct: 85 };
+  if (e.includes('saludable') || e.includes('estable') || e.includes('muy buena') || e.includes('alta') || e.includes('mejor') || e.includes('excelente')) {
+    return { clase: 'verde', texto: 'Estable', pct: 85 };
   }
-  if (e.includes('riesgo') || e.includes('baja') || e.includes('deficitaria')) {
-    return { clase: 'rojo', texto: String(valor), pct: 30 };
+  if (e.includes('riesgo') || e.includes('baja') || e.includes('deficitaria') || e.includes('crítica') || e.includes('peligro')) {
+    return { clase: 'rojo', texto: 'En riesgo', pct: 30 };
   }
-  return { clase: 'ambar', texto: String(valor || 'Regular'), pct: 55 };
+  return { clase: 'ambar', texto: 'Regular', pct: 55 };
 }
 
 function enRango(mes, desde, hasta) {
@@ -61,14 +61,12 @@ function mesesDesnudos(secuencia) {
 
 function Medidor({ estado }) {
   const s = semaforo(estado);
-  const esNumero = typeof estado === 'number';
-  const etiqueta = esNumero ? `${s.texto} (${estado}/100)` : s.texto;
 
   return (
-    <div className={`medidor ${s.clase}`} role="img" aria-label={`Salud del suelo: ${etiqueta}`}>
+    <div className={`medidor ${s.clase}`} role="img" aria-label={`Salud del suelo: ${s.texto}`}>
       <div className="medidor-cab">
         <span className="medidor-titulo">Salud del suelo</span>
-        <span className={`estado-chip ${s.clase}`}>{etiqueta}</span>
+        <span className={`estado-chip ${s.clase}`}>{s.texto}</span>
       </div>
       <div className="medidor-pista">
         <div className="medidor-valor" style={{ width: `${s.pct}%` }} />
@@ -83,7 +81,6 @@ function Barrita({ icon, label, valor, hint }) {
   const s = semaforo(valor);
 
   if (esNumero) {
-    const num = Number(valor);
     return (
       <div className="barrita" title={hint}>
         <div className="barrita-top">
@@ -91,11 +88,8 @@ function Barrita({ icon, label, valor, hint }) {
             <span aria-hidden="true">{icon}</span> {label}
           </span>
           <strong className={`estado-chip ${s.clase}`}>
-            {s.texto} · {num}
+            {s.texto}
           </strong>
-        </div>
-        <div className="barrita-pista" style={{ marginTop: '6px' }}>
-          <div className={`barrita-relleno ${s.clase}`} style={{ width: `${num}%` }} />
         </div>
       </div>
     );
@@ -103,7 +97,6 @@ function Barrita({ icon, label, valor, hint }) {
 
   const texto = String(valor);
   const i = texto.indexOf(':');
-  const titulo = i > -1 ? texto.slice(0, i) : texto;
   const detalle = i > -1 ? texto.slice(i + 1).trim() : '';
   return (
     <div className="barrita" title={hint}>
@@ -111,7 +104,7 @@ function Barrita({ icon, label, valor, hint }) {
         <span className="barrita-label">
           <span aria-hidden="true">{icon}</span> {label}
         </span>
-        <strong className={`estado-chip ${s.clase}`}>{titulo}</strong>
+        <strong className={`estado-chip ${s.clase}`}>{s.texto}</strong>
       </div>
       {detalle && <p className="barrita-detalle">{detalle}</p>}
     </div>
@@ -229,7 +222,7 @@ function TarjetaEstrategia({ e, activa, onElegir, onOpenRules }) {
               onClick={() => setOpenRiesgos(!openRiesgos)}
               aria-expanded={openRiesgos}
             >
-              <span>⚠️ Riesgos en tu región ({e.riesgos.length})</span>
+              <span>⚠️ Riesgos en tu región</span>
               <span className={`acordeon-flecha ${openRiesgos ? 'girada' : ''}`}>▼</span>
             </button>
             <button
