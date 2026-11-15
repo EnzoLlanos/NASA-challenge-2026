@@ -1,6 +1,11 @@
 import os
+import sys
 import uvicorn
 from dotenv import load_dotenv
+
+# Consolas Windows (cp1252) no pueden imprimir emoji sin esto
+if sys.stdout.encoding and sys.stdout.encoding.lower() != "utf-8":
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
 load_dotenv()
 
