@@ -10,7 +10,6 @@ const METRICAS = [
   { key: 'agua', label: 'Agua', icon: '💧', hint: 'Uso eficiente del agua' },
   { key: 'nutrientes', label: 'Nutrientes', icon: '🌱', hint: 'Fertilidad del suelo' },
   { key: 'erosion', label: 'Protección contra erosión', icon: '🛡️', hint: 'Menos suelo perdido' },
-  { key: 'margen', label: 'Margen / Renta', icon: '💰', hint: 'Estabilidad comercial' },
 ];
 
 // Semáforo compatible tanto con puntaje numérico (0-100) como con estado textual
