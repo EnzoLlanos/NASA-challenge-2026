@@ -156,6 +156,8 @@ class RotationResponse(BaseModel):
     recomendacion: str
     estrategias: List[StrategyOption] = Field(default_factory=list)
     data_gaps: List[str] = Field(default_factory=list)
+    lote: Optional[Dict[str, Any]] = None
+    evidencia_nasa: Optional[List[Dict[str, Any]]] = None
 
     @property
     def recommendation(self) -> str:

@@ -209,6 +209,8 @@ class RotationResponse(BaseModel):
         ],
         description="Limitaciones honestas del dato satelital explicadas de forma simple"
     )
+    lote: Optional[Dict[str, Any]] = None
+    evidencia_nasa: Optional[List[Dict[str, Any]]] = None
 
     # Campos retrocompatibles
     @property

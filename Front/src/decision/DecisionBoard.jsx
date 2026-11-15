@@ -235,8 +235,10 @@ export default function DecisionBoard({ simulacion, params, isLoading: propLoadi
   const [sel, setSel] = useState(null);
   const [vista, setVista] = useState('lado'); // 'lado' | 'selector'
 
-  const seleccionada = sim.estrategias.find((e) => e.id === sel) ?? sim.estrategias[0];
-  const visibles = vista === 'lado' ? sim.estrategias : [seleccionada];
+  const estrategias = sim?.estrategias || [];
+  const seleccionada = estrategias.find((e) => e.id === sel) ?? estrategias[0];
+  const visibles = vista === 'lado' ? estrategias : [seleccionada].filter(Boolean);
+  const nombreLote = sim?.lote?.nombre || sim?.tierra_nombre || 'Campo en San Luis';
 
   return (
     <div className="decision">
@@ -246,7 +248,7 @@ export default function DecisionBoard({ simulacion, params, isLoading: propLoadi
 
       <section aria-labelledby="c-titulo">
         <div className="barra-titulo">
-          <h2 id="c-titulo">Comparador de 3 estrategias — {sim.lote.nombre}</h2>
+          <h2 id="c-titulo">Comparador de estrategias — {nombreLote}</h2>
           <div className="selector" role="group" aria-label="Modo de vista">
             <button className={vista === 'lado' ? 'on' : ''} onClick={() => setVista('lado')}>Lado a lado</button>
             <button className={vista === 'selector' ? 'on' : ''} onClick={() => setVista('selector')}>Una por una</button>
@@ -254,7 +256,7 @@ export default function DecisionBoard({ simulacion, params, isLoading: propLoadi
         </div>
         {vista === 'selector' && (
           <div className="pestanas" role="tablist">
-            {sim.estrategias.map((e) => (
+            {estrategias.map((e) => (
               <button
                 key={e.id}
                 role="tab"
@@ -274,8 +276,8 @@ export default function DecisionBoard({ simulacion, params, isLoading: propLoadi
         </div>
       </section>
 
-      <Timeline estrategia={seleccionada} />
-      <EvidenciaNasa items={sim.evidencia_nasa} />
+      {seleccionada && <Timeline estrategia={seleccionada} />}
+      <EvidenciaNasa items={sim?.evidencia_nasa || []} />
     </div>
   );
 }

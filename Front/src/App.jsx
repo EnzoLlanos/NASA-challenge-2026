@@ -3,6 +3,7 @@ import Sidebar from "./components/config/Sidebar";
 import { SAMPLE_LOT_SAN_LUIS } from "./data/mockData";
 import "./styles/config.css";
 import DecisionBoard from "./decision/DecisionBoard.jsx";
+import WelcomeState from "./components/welcome/WelcomeState.jsx";
 import { simulateRotations } from "./services/simulationService.js";
 
 const REGION_LABELS = {
@@ -29,12 +30,14 @@ export default function App() {
   });
 
   const [isLoading, setIsLoading] = useState(false);
+  const [hasCalculated, setHasCalculated] = useState(false);
   const [simulationData, setSimulationData] = useState(null);
   const [errorMessage, setErrorMessage] = useState(null);
 
   // Ejecuta la llamada al servicio de simulación de la API
   const runSimulation = async (paramsToSimulate) => {
     setIsLoading(true);
+    setHasCalculated(true);
     setErrorMessage(null);
     try {
       const data = await simulateRotations(paramsToSimulate);
@@ -63,7 +66,7 @@ export default function App() {
         isLoading={isLoading}
       />
 
-      {/* Bloque 2 y 3: Tablero de Decisión y Evidencia NASA */}
+      {/* Bloque 2 y 3: Tablero de Decisión o Bienvenida Inicial */}
       <main className="main-dashboard">
         {errorMessage && (
           <div
@@ -81,12 +84,18 @@ export default function App() {
           </div>
         )}
 
-        {/* Tablero de decisión integrado */}
-        <DecisionBoard
-          simulacion={simulationData}
-          params={config}
-          isLoading={isLoading}
-        />
+        {!hasCalculated ? (
+          <WelcomeState
+            selectedRegion={config.region}
+            regionName={REGION_LABELS[config.region]}
+          />
+        ) : (
+          <DecisionBoard
+            simulacion={simulationData}
+            params={config}
+            isLoading={isLoading}
+          />
+        )}
       </main>
     </div>
   );

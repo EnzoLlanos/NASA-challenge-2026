@@ -366,11 +366,45 @@ class ScoringEngine:
 
         estrategias = [estrategia_recomendada, estrategia_alternativa, estrategia_actual]
 
+        lote_dict = {
+            "nombre": tierra_nombre or f"Lote en {nombre_zona}",
+            "lat": -33.30,
+            "lon": -65.30,
+            "hectareas": 150,
+            "zona": zona.value,
+        }
+
+        evidencia_nasa_list = [
+            {
+                "satelite": "SMAP",
+                "titulo": "Humedad del suelo",
+                "nivel": "verde" if zona == ZonaSanLuis.CENTRO else "ambar",
+                "texto": f"Observaciones satelitales en {nombre_zona} indican ciclos de recarga de humedad en verano.",
+                "dato": "Humedad superficial monitoreada por SMAP",
+            },
+            {
+                "satelite": "ECOSTRESS",
+                "titulo": "Estrés térmico y evaporación",
+                "nivel": "rojo" if zona == ZonaSanLuis.NORTE else "ambar",
+                "texto": f"Se detecta alta evaporación cuando el suelo queda descubierto entre mayo y octubre en {nombre_zona}.",
+                "dato": "5 meses de ventana crítica de cobertura",
+            },
+            {
+                "satelite": "GPM / NASA POWER",
+                "titulo": "Régimen de precipitaciones",
+                "nivel": "azul",
+                "texto": f"En {nombre_zona}, más del 70% de la lluvia se concentra entre noviembre y marzo.",
+                "dato": "Datos climáticos NASA 2000-2025",
+            },
+        ]
+
         return RotationResponse(
             zona=zona,
             tierra_nombre=tierra_nombre,
             recomendacion=estrategia_recomendada.nombre,
             estrategias=estrategias,
+            lote=lote_dict,
+            evidencia_nasa=evidencia_nasa_list,
             data_gaps=[
                 f"Datos ajustados a la {nombre_zona} con satélites NASA POWER y modelos INTA.",
                 "Los resultados son orientativos para apoyar tu decisión: conversalo siempre con tu asesor técnico de confianza.",

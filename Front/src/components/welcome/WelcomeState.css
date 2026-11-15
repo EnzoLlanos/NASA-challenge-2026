@@ -1,0 +1,211 @@
+.welcome-container {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  animation: fadeInQuick 0.25s ease-out;
+}
+
+@keyframes fadeInQuick {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------- Hero corto ---------- */
+.welcome-hero {
+  background: linear-gradient(135deg, #ffffff 0%, var(--green-tint, #e4eedc) 100%);
+  border: 1.5px solid var(--border, #e2ddca);
+  border-radius: 16px;
+  padding: 26px 28px;
+  box-shadow: 0 4px 14px rgba(31, 77, 43, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.welcome-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: #ffffff;
+  color: var(--green-dark, #1f4d2b);
+  border: 1px solid #c8ddc4;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  width: fit-content;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.welcome-title {
+  margin: 2px 0 0;
+  font-size: 1.7rem;
+  font-weight: 800;
+  color: var(--text-navy, #1f2a1f);
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+.welcome-subtitle {
+  margin: 0;
+  font-size: 0.98rem;
+  color: var(--text-navy-muted, #4f5f4f);
+  font-weight: 500;
+}
+
+/* ---------- 3 Pasos mínimos ---------- */
+.welcome-steps-card {
+  background: var(--card, #fffdf7);
+  border: 1.5px solid var(--border, #e2ddca);
+  border-radius: 16px;
+  padding: 18px 20px;
+  box-shadow: 0 3px 10px rgba(31, 77, 43, 0.03);
+}
+
+.steps-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 800px) {
+  .steps-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.step-card {
+  background: #ffffff;
+  border: 1.5px solid #e8e4d6;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+}
+
+.step-card:hover {
+  transform: translateY(-2px);
+  border-color: #2f6b3a;
+}
+
+.step-card.highlight {
+  background: linear-gradient(180deg, #ffffff 0%, var(--green-tint, #e4eedc) 100%);
+  border-color: #a9cf9d;
+}
+
+.step-badge {
+  font-size: 0.72rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--green, #2f6b3a);
+}
+
+.step-card h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 750;
+  color: var(--text-navy, #1f2a1f);
+}
+
+.step-keyword {
+  font-size: 0.84rem;
+  font-weight: 600;
+  color: var(--text-navy-muted, #4f5f4f);
+}
+
+/* ---------- 3 Palabras clave ---------- */
+.welcome-features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+@media (max-width: 800px) {
+  .welcome-features-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.feature-box {
+  background: var(--card, #fffdf7);
+  border: 1px solid var(--border, #e2ddca);
+  border-radius: 12px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.feature-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+  padding: 8px;
+  background: var(--green-tint, #e4eedc);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.feature-box h4 {
+  margin: 0 0 2px;
+  font-size: 0.92rem;
+  font-weight: 750;
+  color: var(--text-navy, #1f2a1f);
+}
+
+.feature-tag {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--green, #2f6b3a);
+}
+
+/* ---------- Banner inferior conciso ---------- */
+.welcome-cta {
+  background: linear-gradient(135deg, #f2f7ec 0%, #e7f2e0 100%);
+  border: 1.5px dashed #2f6b3a;
+  border-radius: 14px;
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.cta-icon {
+  font-size: 1.6rem;
+  line-height: 1;
+  animation: bounceLeft 1.4s infinite ease-in-out;
+}
+
+@keyframes bounceLeft {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-5px);
+  }
+}
+
+.cta-texts strong {
+  display: block;
+  font-size: 0.94rem;
+  color: var(--green-dark, #1f4d2b);
+  font-weight: 750;
+}
+
+.cta-texts span {
+  font-size: 0.84rem;
+  color: var(--text-navy-muted, #4f5f4f);
+  font-weight: 500;
+}
