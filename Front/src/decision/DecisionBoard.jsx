@@ -61,8 +61,7 @@ function mesesDesnudos(secuencia) {
 
 function Medidor({ estado }) {
   const s = semaforo(estado);
-  const esNumero = typeof estado === 'number';
-  const etiqueta = esNumero ? `${s.texto} (${estado}/100)` : s.texto;
+  const etiqueta = s.texto;
 
   return (
     <div className={`medidor ${s.clase}`} role="img" aria-label={`Salud del suelo: ${etiqueta}`}>
@@ -91,7 +90,7 @@ function Barrita({ icon, label, valor, hint }) {
             <span aria-hidden="true">{icon}</span> {label}
           </span>
           <strong className={`estado-chip ${s.clase}`}>
-            {s.texto} · {num}
+            {s.texto}
           </strong>
         </div>
         <div className="barrita-pista" style={{ marginTop: '6px' }}>
