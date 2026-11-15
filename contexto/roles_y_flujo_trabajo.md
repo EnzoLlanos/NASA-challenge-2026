@@ -67,14 +67,15 @@ Basado en el seguimiento del proyecto y las guías existentes, aquí asigno las 
 - Reportar usabilidad y sugerencias de mejora
 - **Tareas adicionales:** Diseñar/tests básicos, validar flujo completo
 
-### **gualda** - Documentador y Coordinador General
-**Qué ha venido haciendo:** Ha estado a cargo de las guías del equipo, documentación del proyecto y plan de trabajo paralelo.
+### **gualda** - Integración Datos-Backend y Validador de Zonas
+**Qué ha venido haciendo:** Ha trabajado con las guías del equipo, la estructura de datos y la conexión entre pipeline y backend.
 **Nuevas responsabilabilidades:**
-- Actualizar este documento (`contexto/roles_y_flujo_trabajo.md`) con el progreso de cada integrante
-- Mantener actualizadas las guías de cada equipo (`guia_equipo_backend.md`, `guia_equipo_frontend.md`, `guia_equipo_datos.md`)
-- Coordinar las reuniones de seguimiento y el flujo de trabajo
-- Documentar los cambios realizados para la demo final
-- **Archivos a actualizar:** Todos los documentos de contexto, especialmente los de guía por equipo
+- Validar la estructura de `data/crops.yaml` por zona (norte, centro, sur) y asegurar que sea compatible con los schemas Pydantic del backend
+- Verificar que los indicadores climáticos (`indicadores_calculados.json`, `power_monthly.csv`) se integren correctamente con la nueva estructura sin porcentajes
+- Asistir a Enzo en el `engine.py` para testear cálculos de score con datos de las 3 zonas
+- Co-testear junto a Topo las integraciones parciales y validar que los datos por zona se muestren correctamente
+- Asegurar que los `data_gaps` sean realistas para cada región (norte/centro/sur)
+- **Archivos a validar/actualizar:** `data/crops.yaml`, `backend/app/schemas.py`, `backend/app/scoring/engine.py`, `Front/src/data/mockData.js`
 
 ---
 
@@ -91,7 +92,7 @@ Todos los equipos pueden trabajar en sus áreas asignadas al mismo tiempo:
 - **Mati:** Define zonas Norte/Centro/Sur y adapta crops.yaml
 - **Enzo:** Actualiza schemas y engine del backend para nueva estructura
 - **Topo:** Empieza a probar versiones preliminares
-- **gualda:** Documenta avances y coordina
+- **gualda:** Valida integraciones y datos por zona
 
 **Orden crítico:** El trabajo de **Mati (zonas y crops.yaml)** debe completarse mínimamente para que **Enzo** pueda conectar el backend correctamente. Lo demás se puede hacer en paralelo.
 
@@ -99,7 +100,7 @@ Todos los equipos pueden trabajar en sus áreas asignadas al mismo tiempo:
 - Una vez que Juan termine los menús desplegables y Martin haya remueve los porcentajes
 - Enzo integra los cambios del backend con los del frontend
 - Topo testa el flujo completo con agricultores simulados
-- gualda documenta todo el proceso
+- gualda valida integraciones y datos por zona
 
 #### **Fase 3: Ajustes Finales (Horas 5-6)**
 - Refinamientos menores en UI basados en pruebas de Topo
@@ -123,11 +124,11 @@ Todos los equipos pueden trabajar en sus áreas asignadas al mismo tiempo:
 | Tiempo | Actividad | Responsable(s) |
 |--------|-----------|----------------|
 | **0:00 - 0:30** | Kickoff: Revisar este documento, aclarar dudas, definir dudas | Todo el equipo |
-| **0:30 - 2:30** | **Trabajo paralelo Fase 1:**<br>- Juan: menús desplegables UI<br>- Martin: quitar % de mockData<br>- Mati: definir zonas + crops.yaml<br>- Enzo: actualizar schemas/backend<br>- Topo: empezar pruebas preliminares<br>- gualda: documentar inicio | Juan, Martin, Mati, Enzo, Topo, gualda |
+| **0:30 - 2:30** | **Trabajo paralelo Fase 1:**<br>- Juan: menús desplegables UI<br>- Martin: quitar % de mockData<br>- Mati: definir zonas + crops.yaml<br>- Enzo: actualizar schemas/backend<br>- Topo: empezar pruebas preliminares<br>- gualda: valida estructura crops.yaml y datos integración | Juan, Martin, Mati, Enzo, Topo, gualda |
 | **2:30 - 3:30** | **Checkpoint integración:**<br>- Reunión corta (15 min) para verificar que schemas, mockData y UI estén alineados<br>- Ajustes menores si es necesario | Enzo (lidera), con presencia opcional de los demás |
-| **3:30 - 5:00** | **Trabajo paralelo Fase 2:**<br>- Juan: completar y refinar menús desplegables<br>- Martin: verificar que % estén removidos totalmente<br>- Mati: terminar definición de zonas y validar crops.yaml<br>- Enzo: integrar backend con nuevo esquema<br>- Topo: testing completo flujo end-to-end<br>- gualda: actualizar documentación | Todos |
+| **3:30 - 5:00** | **Trabajo paralelo Fase 2:**<br>- Juan: completar y refinar menús desplegables<br>- Martin: verificar que % estén removidos totalmente<br>- Mati: terminar definición de zonas y validar crops.yaml<br>- Enzo: integrar backend con nuevo esquema<br>- Topo: testing completo flujo end-to-end<br>- gualda: valida integración datos zonas y engine | Todos |
 | **5:00 - 5:45** | **Testing con usuario simulado:**<br>- Topo prueba con "agricultor inexperto"<br>- Feedback sobre usabilidad de menús, simplicidad | Topo + Juan (ajustes UI) |
-| **5:45 - 6:00** | **Cierre y próximos pasos:**<br>- gualda resume avances en documento<br>- Definir qué falta para la demo<br>- Planificar ajustes finales | Todo el equipo / gualda |
+| **5:45 - 6:00** | **Cierre y próximos pasos:**<br>- gualda resume validez de integraciones y datos por zona<br>- Definir qué falta para la demo<br>- Planificar ajustes finales | Todo el equipo / gualda |
 
 ---
 
@@ -150,7 +151,7 @@ Todos los equipos pueden trabajar en sus áreas asignadas al mismo tiempo:
 
 ### Archivos compartidos/validados:
 - `Front/src/data/mockData.js` - Mock data actualizada (validado por Martin y Enzo)
-- `contexto/roles_y_flujo_trabajo.md` - Este documento (actualizado por gualda)
+- `contexto/roles_y_flujo_trabajo.md` - Este documento (validado por gualda)
 
 ---
 
