@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from app.schemas.region import RegionSanLuis
+from app.schemas.region import RegionSanLuis, ReglaRegionalItem
 
 
 # =============================================================================
@@ -53,6 +53,22 @@ class SimulationPriorities(BaseModel):
     forageProfit: bool = Field(default=False, description="Prioridad: Sumar forraje / renta")
 
 
+class CondicionZonalInput(BaseModel):
+    """Condiciones específicas del lote según la región seleccionada (Norte, Centro o Sur)."""
+    altasTemperaturasSecano: Optional[bool] = Field(
+        default=None,
+        description="Región Norte: Lote expuesto a golpe de calor estival sin cortina ni riego complementario"
+    )
+    riesgoNapasOErosionHidrica: Optional[bool] = Field(
+        default=None,
+        description="Región Centro: Lote con pendiente o riesgo de escurrimiento / ascenso de napa (ej. Cuenca del Morro)"
+    )
+    sueloArenosoVoladura: Optional[bool] = Field(
+        default=None,
+        description="Región Sur: Lote con suelo medanoso/arenoso propenso a voladura eólica y heladas"
+    )
+
+
 class SimulationRequest(BaseModel):
     """Payload JSON que envía el formulario ConfigForm.jsx al simular."""
     region: RegionSanLuis = Field(
@@ -65,6 +81,14 @@ class SimulationRequest(BaseModel):
     priorities: SimulationPriorities
     lotName: Optional[str] = Field(default="Establecimiento Don Pedro - San Luis", description="Nombre del lote")
     coords: Optional[Coordinates] = Field(default=None, description="Coordenadas opcionales por compatibilidad")
+    fieldCondition: Optional[bool] = Field(
+        default=True,
+        description="Condición crítica activa del campo para la zona elegida (true/false)"
+    )
+    zonalConditions: Optional[CondicionZonalInput] = Field(
+        default=None,
+        description="Detalle opcional de condiciones zonales específicas"
+    )
 
 
 # =============================================================================
@@ -76,6 +100,8 @@ class LoteInfo(BaseModel):
     lat: float
     lon: float
     hectareas: int = Field(default=120)
+    region: Optional[str] = Field(default="centro")
+    amenaza_regional: Optional[str] = Field(default=None)
 
 
 class SecuenciaItem(BaseModel):
@@ -104,6 +130,10 @@ class EstrategiaItem(BaseModel):
     secuencia: List[SecuenciaItem]
     metricas: MetricasEstrategia
     riesgos: List[str]
+    reglas_aplicadas: Optional[List[str]] = Field(
+        default_factory=list,
+        description="Códigos y resumen de las reglas regionales aplicadas a esta estrategia"
+    )
 
 
 class EvidenciaNasaItem(BaseModel):
@@ -120,3 +150,7 @@ class SimulationResponse(BaseModel):
     lote: LoteInfo
     estrategias: List[EstrategiaItem]
     evidencia_nasa: List[EvidenciaNasaItem]
+    reglas_regionales: Optional[List[ReglaRegionalItem]] = Field(
+        default_factory=list,
+        description="Reglas agronómicas evaluadas para la región seleccionada"
+    )

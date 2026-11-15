@@ -1,18 +1,66 @@
-import { useState } from "react";
-import { REGION_OPTIONS, CROP_OPTIONS, PRIORITY_OPTIONS } from "../../data/mockData";
+import { useState, useEffect } from "react";
+import {
+  REGION_OPTIONS,
+  CROP_OPTIONS,
+  PRIORITY_OPTIONS,
+  REGION_FORM_CONFIG_FALLBACK,
+} from "../../data/mockData";
+import { fetchRegionsFormConfig } from "../../services/simulationService";
 import MapSelector, { SAN_LUIS_REGIONS } from "./MapSelector";
 
 export default function ConfigForm({ config, onChange, onSubmit, isLoading }) {
   const [regionError, setRegionError] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
+  const [regionsFormMeta, setRegionsFormMeta] = useState(REGION_FORM_CONFIG_FALLBACK);
+
+  // Carga las configuraciones regionales desde el Backend (Controller -> Service -> Repository)
+  useEffect(() => {
+    let active = true;
+    fetchRegionsFormConfig()
+      .then((data) => {
+        if (active && data && typeof data === "object") {
+          setRegionsFormMeta((prev) => ({ ...prev, ...data }));
+        }
+      })
+      .catch(() => {
+        // Fallback silencioso a REGION_FORM_CONFIG_FALLBACK
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const togglePriority = (id) =>
-    onChange({ ...config, priorities: { ...config.priorities, [id]: !config.priorities[id] } });
+    onChange({
+      ...config,
+      priorities: { ...config.priorities, [id]: !config.priorities[id] },
+    });
 
   const handleMapSelect = (regionValue) => {
     setRegionError(false);
-    onChange({ ...config, region: regionValue });
+    const meta = regionsFormMeta[regionValue] || REGION_FORM_CONFIG_FALLBACK[regionValue];
+    const suggestedPriorities = meta?.prioridades_sugeridas || config.priorities;
+    const defaultCondition =
+      meta?.condicion_contextual?.valor_por_defecto !== undefined
+        ? meta.condicion_contextual.valor_por_defecto
+        : true;
+
+    onChange({
+      ...config,
+      region: regionValue,
+      zona: regionValue,
+      priorities: { ...suggestedPriorities },
+      fieldCondition: defaultCondition,
+    });
     setIsMapOpen(false);
+  };
+
+  const handleConditionToggle = () => {
+    const nextVal = !(config.fieldCondition ?? true);
+    onChange({
+      ...config,
+      fieldCondition: nextVal,
+    });
   };
 
   const handleSubmit = (e) => {
@@ -28,6 +76,10 @@ export default function ConfigForm({ config, onChange, onSubmit, isLoading }) {
   const currentRegionObj = SAN_LUIS_REGIONS.find((r) => r.id === config.region);
   const currentRegionLabel =
     REGION_OPTIONS.find((r) => r.value === config.region)?.label || null;
+  const activeRegionMeta = config.region ? regionsFormMeta[config.region] : null;
+  const condicionPregunta = activeRegionMeta?.condicion_contextual || null;
+  const recommendedCrops = activeRegionMeta?.cultivos_recomendados || [];
+  const fieldConditionChecked = config.fieldCondition ?? true;
 
   return (
     <>
@@ -67,6 +119,32 @@ export default function ConfigForm({ config, onChange, onSubmit, isLoading }) {
           )}
         </div>
 
+        {/* Condición específica del campo según la región seleccionada */}
+        {condicionPregunta && (
+          <div className="form-group">
+            <span className="form-label">
+              {condicionPregunta.icono} Condición del lote en {activeRegionMeta.nombre.replace(" de San Luis", "")}
+            </span>
+            <label
+              className={`priority-chip ${fieldConditionChecked ? "selected" : ""}`}
+            >
+              <div className="priority-info">
+                <span className="priority-icon">{condicionPregunta.icono}</span>
+                <div className="priority-texts">
+                  <span className="priority-title">{condicionPregunta.etiqueta}</span>
+                  <span className="priority-desc">{condicionPregunta.descripcion}</span>
+                </div>
+              </div>
+              <input
+                type="checkbox"
+                className="priority-checkbox"
+                checked={fieldConditionChecked}
+                onChange={handleConditionToggle}
+              />
+            </label>
+          </div>
+        )}
+
         <div className="form-group">
           <label htmlFor="crop-select" className="form-label">🌾 ¿Qué venís sembrando?</label>
           <select
@@ -75,9 +153,16 @@ export default function ConfigForm({ config, onChange, onSubmit, isLoading }) {
             value={config.currentCrop}
             onChange={(e) => onChange({ ...config, currentCrop: e.target.value })}
           >
-            {CROP_OPTIONS.map((c) => (
-              <option key={c.value} value={c.value}>{c.label}</option>
-            ))}
+            {CROP_OPTIONS.map((c) => {
+              const isRec = recommendedCrops.some(
+                (rc) => rc.toLowerCase() === c.value.toLowerCase()
+              );
+              return (
+                <option key={c.value} value={c.value}>
+                  {c.label} {isRec && config.region ? "★ Adaptado a tu zona" : ""}
+                </option>
+              );
+            })}
           </select>
         </div>
 
@@ -102,7 +187,14 @@ export default function ConfigForm({ config, onChange, onSubmit, isLoading }) {
         </div>
 
         <div className="form-group">
-          <span className="form-label">🎯 ¿Qué priorizás este año?</span>
+          <span className="form-label">
+            🎯 ¿Qué priorizás este año?{" "}
+            {config.region && (
+              <small style={{ fontWeight: 500, color: "#2f6b3a", fontSize: "0.75rem" }}>
+                (Sugeridas para {config.region.toUpperCase()})
+              </small>
+            )}
+          </span>
           <div className="priorities-list">
             {PRIORITY_OPTIONS.map((p) => {
               const selected = Boolean(config.priorities[p.id]);

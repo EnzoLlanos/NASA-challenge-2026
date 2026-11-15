@@ -50,17 +50,17 @@ REGION_COORDS = {
 
 class ClimateService:
     """
-    Servicio de negocio para la simulación agronómica.
+    Servicio de negocio para la simulación agronómica y evaluación de reglas regionales.
     Cruza los datasets climáticos ('power_monthly.csv' y 'power_daily.csv')
-    con el dataset de cultivos ('crops.yaml'), los datos de la Región ('norte', 'centro', 'sur')
-    y las prioridades del agricultor para generar las 3 estrategias de rotación y la evidencia NASA.
+    con el dataset de cultivos ('crops.yaml'), las reglas de la Región ('norte', 'centro', 'sur')
+    y las condiciones del lote del agricultor para generar las 3 estrategias y la evidencia NASA.
     """
 
     def __init__(self, repository: ClimateRepository | None = None):
         self.repository = repository or ClimateRepository()
 
     def simulate(self, request: SimulationRequest) -> SimulationResponse:
-        # 1. Cargar los datasets desde el Repository y la info de la Región seleccionada
+        # 1. Cargar los datasets desde el Repository y la info + reglas de la Región seleccionada
         monthly_df = self.repository.get_monthly_dataframe()
         daily_df = self.repository.get_daily_dataframe()
         crops_catalog = self.repository.get_crops_catalog()
@@ -73,7 +73,7 @@ class ClimateService:
         current_key = CROP_KEY_ALIAS.get(request.currentCrop.strip().lower(), "soja")
         current_crop_info = crops_catalog.get(current_key, crops_catalog["soja"])
 
-        # 4. Construir las 3 estrategias cruzando crops.yaml + clima regional + prioridades del usuario
+        # 4. Construir las 3 estrategias cruzando crops.yaml + reglas regionales + prioridades del usuario
         estrategia_actual = self._build_current_strategy(
             current_key, current_crop_info, climate_stats, request
         )
@@ -103,6 +103,8 @@ class ClimateService:
                 lat=lat,
                 lon=lon,
                 hectareas=120,
+                region=request.region.value,
+                amenaza_regional=region_info.amenaza_principal if region_info else None,
             ),
             estrategias=[
                 estrategia_actual,
@@ -110,7 +112,167 @@ class ClimateService:
                 estrategia_forraje,
             ],
             evidencia_nasa=evidencia_nasa,
+            reglas_regionales=region_info.reglas_activas if (region_info and region_info.reglas_activas) else [],
         )
+
+    # =========================================================================
+    # Motor de Reglas por Región (Norte, Centro y Sur)
+    # =========================================================================
+
+    def _is_zonal_condition_active(self, request: SimulationRequest) -> bool:
+        """Determina si la condición crítica del campo en esa zona está activa."""
+        if request.zonalConditions:
+            if request.region == RegionSanLuis.NORTE and request.zonalConditions.altasTemperaturasSecano is not None:
+                return request.zonalConditions.altasTemperaturasSecano
+            if request.region == RegionSanLuis.CENTRO and request.zonalConditions.riesgoNapasOErosionHidrica is not None:
+                return request.zonalConditions.riesgoNapasOErosionHidrica
+            if request.region == RegionSanLuis.SUR and request.zonalConditions.sueloArenosoVoladura is not None:
+                return request.zonalConditions.sueloArenosoVoladura
+        return True if request.fieldCondition is None else bool(request.fieldCondition)
+
+    def _apply_regional_rules(
+        self,
+        region: RegionSanLuis,
+        agua: int,
+        nutrientes: int,
+        erosion: int,
+        margen: int,
+        avg_water_mm: float,
+        avg_drought_tol: float,
+        has_cover_crop: bool,
+        has_n_fixer: bool,
+        is_monoculture: bool,
+        strategy_type: str,
+        request: SimulationRequest,
+        climate_stats: Dict[str, Any],
+    ) -> Tuple[int, int, int, int, List[str], List[str]]:
+        """
+        Aplica las reglas agronómicas específicas de cada región (N1-N3, C1-C3, S1-S3)
+        y devuelve (agua, nutrientes, erosion, margen, riesgos_especificos, reglas_aplicadas).
+        """
+        riesgos: List[str] = []
+        reglas_aplicadas: List[str] = []
+        condicion_activa = self._is_zonal_condition_active(request)
+
+        # ---------------------------------------------------------------------
+        # REGLAS REGIÓN NORTE (520 mm/año · 34 días >35 °C · Alta evaporación)
+        # ---------------------------------------------------------------------
+        if region == RegionSanLuis.NORTE:
+            # Regla N1: Déficit hídrico crítico estival
+            if request.irrigation == "lluvia" and avg_water_mm >= 440:
+                penal_n1 = 18 if is_monoculture else 8
+                if condicion_activa:
+                    penal_n1 += 5
+                agua = max(15, agua - penal_n1)
+                reglas_aplicadas.append("Regla N1 (Déficit hídrico estival)")
+                if is_monoculture:
+                    riesgos.append(
+                        f"Regla N1: Déficit hídrico severo en floración ({int(avg_water_mm)} mm demandados vs 520 mm/año en secano)"
+                    )
+
+            # Regla N2: Golpe de calor reproductivo (34 días >35 °C)
+            if avg_drought_tol >= 0.75:
+                agua = min(96, agua + 12)
+                margen = min(94, margen + 10)
+                reglas_aplicadas.append("Regla N2 (Resiliencia térmica >35 °C)")
+            elif is_monoculture:
+                margen = max(25, margen - (12 if condicion_activa else 6))
+                reglas_aplicadas.append("Regla N2 (Vulnerabilidad a golpe de calor)")
+                riesgos.append(
+                    f"Regla N2: {int(climate_stats['annual_heat_days'])} días/año >35 °C provocan aborto floral sin rotación rústica"
+                )
+
+            # Regla N3: Escudo contra evaporación directa
+            if has_cover_crop:
+                agua = min(96, agua + (15 if condicion_activa else 10))
+                erosion = min(96, erosion + 12)
+                reglas_aplicadas.append("Regla N3 (Escudo anti-evaporación con cobertura)")
+                riesgos.append(
+                    "Regla N3: Secar la cobertura temprano en septiembre para reservar agua útil al cultivo estival"
+                )
+            else:
+                erosion = max(18, erosion - 12)
+                riesgos.append(
+                    f"Regla N3: Alta pérdida por evaporación directa ({climate_stats['annual_evap_mm']} mm/año) en barbecho descubierto"
+                )
+
+        # ---------------------------------------------------------------------
+        # REGLAS REGIÓN CENTRO (680 mm/año · Tormentas estivales · Napas/Cuenca)
+        # ---------------------------------------------------------------------
+        elif region == RegionSanLuis.CENTRO:
+            # Regla C1: Control hidrológico y de napas con raíces vivas
+            if is_monoculture:
+                penal_c1 = 24 if condicion_activa else 15
+                erosion = max(18, erosion - penal_c1)
+                reglas_aplicadas.append("Regla C1 (Alerta de escurrimiento y ascenso de napa)")
+                riesgos.append(
+                    "Regla C1: Suelo sin raíces activas en invierno agrava el escurrimiento y el ascenso de napa freática (Cuenca del Morro)"
+                )
+            elif has_cover_crop:
+                erosion = min(96, erosion + (18 if condicion_activa else 12))
+                agua = min(95, agua + 10)
+                reglas_aplicadas.append("Regla C1 (Consumo de excedentes hídricos con raíces vivas)")
+                riesgos.append(
+                    "Regla C1: Monitorear humedad en primavera para regular el consumo de la cobertura viva"
+                )
+
+            # Regla C2: Sinergia Gramínea + Leguminosa
+            if not is_monoculture and has_n_fixer:
+                nutrientes = min(96, nutrientes + 16)
+                reglas_aplicadas.append("Regla C2 (Sinergia Gramínea + Leguminosa)")
+
+            # Regla C3: Degradación estructural por monocultivo continuo
+            if is_monoculture:
+                nutrientes = max(20, nutrientes - 18)
+                agua = max(22, agua - 12)
+                reglas_aplicadas.append("Regla C3 (Degradación estructural y planchado)")
+                riesgos.append(
+                    "Regla C3: Pérdida de materia orgánica y compactación superficial ante lluvias intensas de verano"
+                )
+
+        # ---------------------------------------------------------------------
+        # REGLAS REGIÓN SUR (610 mm/año · Suelos medanosos · 24 heladas · Viento)
+        # ---------------------------------------------------------------------
+        elif region == RegionSanLuis.SUR:
+            # Regla S1: Alerta crítica de voladura de médanos (Erosión eólica)
+            if is_monoculture:
+                penal_s1 = 36 if condicion_activa else 25
+                erosion = max(12, erosion - penal_s1)
+                reglas_aplicadas.append("Regla S1 (Peligro crítico de voladura de médanos)")
+                riesgos.append(
+                    "Regla S1: Riesgo crítico de voladura de suelos arenosos por vientos fuertes de agosto a octubre"
+                )
+            elif has_cover_crop:
+                erosion = min(96, erosion + (20 if condicion_activa else 14))
+                reglas_aplicadas.append("Regla S1 (Anclaje de médanos con raíces invernales)")
+
+            # Regla S2: Ventana de heladas tardías y tempranas (24 días/año)
+            reglas_aplicadas.append("Regla S2 (Ventana de 24 heladas/año)")
+            if is_monoculture:
+                riesgos.append(
+                    f"Regla S2: Alta exposición a {int(climate_stats['annual_frost_days'])} días de heladas/año y baja retención de humedad en arena"
+                )
+            elif strategy_type == "regenerativa":
+                riesgos.append(
+                    f"Regla S2: Ajustar fecha de siembra estival para escapar a las {int(climate_stats['annual_frost_days'])} heladas anuales del Sur"
+                )
+
+            # Regla S3: Fijación de perfil arenoso y aptitud mixta/forrajera
+            if strategy_type == "forraje":
+                agua = min(95, agua + 12)
+                margen = min(94, margen + (14 if condicion_activa else 8))
+                reglas_aplicadas.append("Regla S3 (Aptitud mixta forrajera en suelo arenoso)")
+                riesgos.append(
+                    "Regla S3: Retirar hacienda a tiempo para dejar remanente vegetal que proteja el suelo arenoso del viento"
+                )
+
+        # Riesgos complementarios si la lista quedó con menos de 2 ítems
+        if strategy_type == "regenerativa" and len(riesgos) < 2:
+            riesgos.append("Inversión inicial en semilla de cobertura compensada por menor gasto en fertilización nitrogenada")
+        elif strategy_type == "forraje" and len(riesgos) < 2:
+            riesgos.append("Controlar carga animal en pastoreo directo para evitar compactación superficial")
+
+        return agua, nutrientes, erosion, margen, riesgos[:3], reglas_aplicadas
 
     # =========================================================================
     # Métodos privados: Procesamiento de Datasets Climáticos y de Cultivos
@@ -203,12 +365,13 @@ class ClimateService:
         crops_in_rotation: List[Dict[str, Any]],
         has_cover_crop: bool,
         is_monoculture: bool,
+        strategy_type: str,
         climate_stats: Dict[str, Any],
         request: SimulationRequest,
-    ) -> Tuple[int, MetricasEstrategia]:
+    ) -> Tuple[int, MetricasEstrategia, List[str], List[str]]:
         """
-        Calcula las 4 barras (agua, nutrientes, erosion, margen) y el indicador salud_suelo
-        en escala 0-100 a partir de los rasgos reales en crops.yaml y el régimen hídrico regional.
+        Calcula las 4 barras (agua, nutrientes, erosion, margen), salud_suelo y riesgos regionales
+        a partir de los rasgos en crops.yaml y el motor de reglas por región (Norte, Centro, Sur).
         """
         n = max(len(crops_in_rotation), 1)
 
@@ -220,64 +383,76 @@ class ClimateService:
         avg_root_cm = sum(float(c.get("root_depth", 120)) for c in crops_in_rotation) / n
         has_n_fixer = any(bool(c.get("nitrogen_fixation", False)) for c in crops_in_rotation)
 
-        # 1. Métrica AGUA (0-100) sensible a la lluvia regional (520mm Norte, 680mm Centro, 610mm Sur)
+        # 1. Base AGUA (0-100)
         water_ratio = min(
             1.0, max(0.15, 1.0 - (avg_water_mm - 180.0) / max(climate_stats["annual_rain_mm"], 420.0))
         )
         agua = int(round((0.50 * avg_drought_tol + 0.50 * water_ratio) * 100))
-        if request.region == RegionSanLuis.NORTE and avg_water_mm >= 450 and request.irrigation == "lluvia":
-            agua = max(18, agua - 8)
         if request.irrigation == "riego":
-            agua = min(95, agua + 14)
+            agua = min(95, agua + 15)
         if is_monoculture:
-            agua = max(20, agua - 22)
+            agua = max(20, agua - 16)
         elif has_cover_crop:
-            agua = min(95, agua + 14)
+            agua = min(95, agua + 10)
 
-        # 2. Métrica NUTRIENTES (0-100)
+        # 2. Base NUTRIENTES (0-100)
         om_norm = min(1.0, avg_om / 0.07)
         root_norm = min(1.0, avg_root_cm / 200.0)
         nutrientes = int(round((0.45 * om_norm + 0.30 * root_norm + (0.25 if has_n_fixer else 0.0)) * 100))
         if is_monoculture:
-            nutrientes = max(22, nutrientes - 25)
+            nutrientes = max(22, nutrientes - 18)
         elif has_cover_crop and has_n_fixer:
-            nutrientes = min(95, nutrientes + 15)
+            nutrientes = min(95, nutrientes + 12)
 
-        # 3. Métrica EROSIÓN (0-100, más = mayor protección contra erosión)
-        erosion = int(round(avg_coverage * 75 + (22 if has_cover_crop else 0)))
-        if request.region == RegionSanLuis.SUR and is_monoculture:
-            # Suelos medanosos del Sur sufren mayor erosión eólica en barbecho desnudo
-            erosion = max(14, erosion - 40)
-        elif is_monoculture:
-            erosion = max(20, erosion - 35)
+        # 3. Base EROSIÓN (0-100)
+        erosion = int(round(avg_coverage * 75 + (20 if has_cover_crop else 0)))
+        if is_monoculture:
+            erosion = max(20, erosion - 18)
 
-        # 4. Métrica MARGEN (0-100)
+        # 4. Base MARGEN (0-100)
         market_scores = [
             MARKET_SCORE_MAP.get(str(c.get("market_potential", "medio")).lower(), 65)
             for c in crops_in_rotation
         ]
         margen = int(round(sum(market_scores) / n))
         if has_cover_crop and len(crops_in_rotation) >= 2:
-            margen = max(55, min(80, margen))
+            margen = max(58, min(84, margen))
 
-        # 5. Ajuste por prioridades seleccionadas y cálculo de Salud Global del Suelo
+        # 5. Ejecutar Motor de Reglas Regionales (Norte, Centro, Sur)
+        agua, nutrientes, erosion, margen, riesgos_reg, reglas_aplicadas = self._apply_regional_rules(
+            region=request.region,
+            agua=agua,
+            nutrientes=nutrientes,
+            erosion=erosion,
+            margen=margen,
+            avg_water_mm=avg_water_mm,
+            avg_drought_tol=avg_drought_tol,
+            has_cover_crop=has_cover_crop,
+            has_n_fixer=has_n_fixer,
+            is_monoculture=is_monoculture,
+            strategy_type=strategy_type,
+            request=request,
+            climate_stats=climate_stats,
+        )
+
+        # 6. Ajuste por prioridades seleccionadas y cálculo de Salud Global del Suelo
         p = request.priorities
         if not is_monoculture:
             if p.water:
-                agua = min(96, agua + 6)
+                agua = min(96, agua + 5)
             if p.nutrients:
-                nutrientes = min(96, nutrientes + 6)
+                nutrientes = min(96, nutrientes + 5)
             if p.erosion:
-                erosion = min(96, erosion + 6)
+                erosion = min(96, erosion + 5)
             if p.forageProfit:
-                margen = min(95, margen + 7)
+                margen = min(95, margen + 6)
         else:
             if p.water:
-                agua = max(16, agua - 4)
+                agua = max(14, agua - 4)
             if p.nutrients:
-                nutrientes = max(18, nutrientes - 4)
+                nutrientes = max(16, nutrientes - 4)
             if p.erosion:
-                erosion = max(14, erosion - 4)
+                erosion = max(12, erosion - 4)
 
         w_agua = 1.6 if p.water else 0.7
         w_nut = 1.6 if p.nutrients else 0.7
@@ -293,6 +468,8 @@ class ClimateService:
         return (
             salud_suelo,
             MetricasEstrategia(agua=agua, nutrientes=nutrientes, erosion=erosion, margen=margen),
+            riesgos_reg,
+            reglas_aplicadas,
         )
 
     def _build_current_strategy(
@@ -305,10 +482,11 @@ class ClimateService:
         crop_name = crop_info["name"]
         desde, hasta = CROP_CALENDAR.get(current_key, (11, 4))
 
-        salud, metricas = self._compute_strategy_metrics(
+        salud, metricas, riesgos, reglas = self._compute_strategy_metrics(
             crops_in_rotation=[crop_info],
             has_cover_crop=False,
             is_monoculture=True,
+            strategy_type="actual",
             climate_stats=climate_stats,
             request=request,
         )
@@ -319,18 +497,16 @@ class ClimateService:
             is_current=True,
             salud_suelo=salud,
             resumen=(
-                f"{crop_name} sobre {crop_name.lower()} ({crop_info['water_consumption']} mm/ciclo) "
+                f"{crop_name} continuo ({crop_info['water_consumption']} mm/ciclo) "
                 f"en {climate_stats['region_name']} ({climate_stats['annual_rain_mm']} mm/año): "
-                "el suelo queda desnudo gran parte del año."
+                "deja el suelo desnudo durante el otoño e invierno."
             ),
             secuencia=[
                 SecuenciaItem(cultivo=crop_name, tipo="cultivo", desde=desde, hasta=hasta)
             ],
             metricas=metricas,
-            riesgos=[
-                "Pérdida de materia orgánica y estructura superficial",
-                f"Erosión por viento en los {climate_stats['dry_months_count']} meses secos de invierno",
-            ],
+            riesgos=riesgos,
+            reglas_aplicadas=reglas,
         )
 
     def _build_regenerative_strategy(
@@ -340,24 +516,48 @@ class ClimateService:
         climate_stats: Dict[str, Any],
         request: SimulationRequest,
     ) -> EstrategiaItem:
-        regen_map = {
-            "soja": ("maíz", "arveja"),
-            "maíz": ("soja", "trigo"),
-            "trigo": ("soja", "arveja"),
-            "girasol": ("trigo", "arveja"),
-            "sorgo": ("soja", "arveja"),
-            "cebada": ("soja", "arveja"),
-            "arveja": ("maíz", "trigo"),
-        }
+        # Selección inteligente según región y cultivo actual
+        if request.region == RegionSanLuis.NORTE:
+            regen_map = {
+                "soja": ("sorgo", "arveja"),
+                "maíz": ("soja", "arveja"),
+                "trigo": ("sorgo", "arveja"),
+                "girasol": ("soja", "arveja"),
+                "sorgo": ("soja", "arveja"),
+                "cebada": ("sorgo", "arveja"),
+                "arveja": ("sorgo", "soja"),
+            }
+        elif request.region == RegionSanLuis.SUR:
+            regen_map = {
+                "soja": ("girasol", "cebada"),
+                "maíz": ("soja", "cebada"),
+                "trigo": ("girasol", "arveja"),
+                "girasol": ("soja", "cebada"),
+                "sorgo": ("soja", "cebada"),
+                "cebada": ("girasol", "arveja"),
+                "arveja": ("girasol", "cebada"),
+            }
+        else:  # CENTRO
+            regen_map = {
+                "soja": ("maíz", "arveja"),
+                "maíz": ("soja", "trigo"),
+                "trigo": ("soja", "arveja"),
+                "girasol": ("maíz", "arveja"),
+                "sorgo": ("soja", "arveja"),
+                "cebada": ("soja", "arveja"),
+                "arveja": ("maíz", "trigo"),
+            }
+
         main_crop_key, cover_crop_key = regen_map.get(current_key, ("maíz", "arveja"))
         main_crop = crops_catalog[main_crop_key]
         cover_crop = crops_catalog[cover_crop_key]
         current_crop = crops_catalog.get(current_key, crops_catalog["soja"])
 
-        salud, metricas = self._compute_strategy_metrics(
+        salud, metricas, riesgos, reglas = self._compute_strategy_metrics(
             crops_in_rotation=[main_crop, cover_crop, current_crop],
             has_cover_crop=True,
             is_monoculture=False,
+            strategy_type="regenerativa",
             climate_stats=climate_stats,
             request=request,
         )
@@ -371,8 +571,8 @@ class ClimateService:
             is_current=False,
             salud_suelo=salud,
             resumen=(
-                f"Rotación desde {current_crop['name']} hacia {main_crop['name']} + {cover_crop['name']} (cobertura): "
-                "el suelo permanece cubierto casi todo el año y recupera fertilidad."
+                f"Rotación calibrada para {climate_stats['region_name']} con {main_crop['name']} + "
+                f"{cover_crop['name']} (cobertura): protege el suelo todo el año y mejora el balance hídrico."
             ),
             secuencia=[
                 SecuenciaItem(cultivo=main_crop["name"], tipo="cultivo", desde=main_desde, hasta=main_hasta),
@@ -384,10 +584,8 @@ class ClimateService:
                 ),
             ],
             metricas=metricas,
-            riesgos=[
-                "Margen algo menor el primer año por costo de semilla de cobertura",
-                "Requiere ajustar la fecha de secado de la cobertura con técnico local",
-            ],
+            riesgos=riesgos,
+            reglas_aplicadas=reglas,
         )
 
     def _build_forage_strategy(
@@ -402,7 +600,7 @@ class ClimateService:
             "maíz": ("sorgo", "trigo"),
             "trigo": ("girasol", "cebada"),
             "girasol": ("sorgo", "cebada"),
-            "sorgo": ("maíz", "cebada"),
+            "sorgo": ("girasol", "cebada"),
             "cebada": ("sorgo", "arveja"),
             "arveja": ("sorgo", "cebada"),
         }
@@ -411,17 +609,18 @@ class ClimateService:
         winter_crop = crops_catalog[winter_key]
         current_crop = crops_catalog.get(current_key, crops_catalog["soja"])
 
-        salud, metricas = self._compute_strategy_metrics(
+        salud, metricas, riesgos, reglas = self._compute_strategy_metrics(
             crops_in_rotation=[summer_crop, winter_crop, current_crop],
             has_cover_crop=True,
             is_monoculture=False,
+            strategy_type="forraje",
             climate_stats=climate_stats,
             request=request,
         )
 
         if request.priorities.forageProfit:
-            metricas.margen = min(92, metricas.margen + 12)
-            salud = min(94, salud + 6)
+            metricas.margen = min(94, metricas.margen + 10)
+            salud = min(95, salud + 5)
 
         s_desde, s_hasta = CROP_CALENDAR.get(summer_key, (11, 3))
         w_desde, w_hasta = CROP_CALENDAR.get(winter_key, (5, 10))
@@ -432,18 +631,16 @@ class ClimateService:
             is_current=False,
             salud_suelo=salud,
             resumen=(
-                f"{summer_crop['name']} ({summer_crop['water_consumption']} mm, alta tolerancia) + "
-                f"{winter_crop['name']} de invierno: diversifica desde {current_crop['name']} con raíces de {summer_crop['root_depth']} cm."
+                f"{summer_crop['name']} ({summer_crop['water_consumption']} mm, alta rusticidad) + "
+                f"{winter_crop['name']} invernal: ancla el suelo con raíces de {summer_crop['root_depth']} cm y suma forraje."
             ),
             secuencia=[
                 SecuenciaItem(cultivo=f"{summer_crop['name']} (doble propósito)", tipo="cultivo", desde=s_desde, hasta=s_hasta),
                 SecuenciaItem(cultivo=f"{winter_crop['name']} (verdeo)", tipo="cultivo", desde=w_desde, hasta=w_hasta),
             ],
             metricas=metricas,
-            riesgos=[
-                "Depende de contar con hacienda o mercado zonal de forraje/grano",
-                "Controlar carga animal para evitar compactación superficial",
-            ],
+            riesgos=riesgos,
+            reglas_aplicadas=reglas,
         )
 
     def _build_nasa_evidence(
