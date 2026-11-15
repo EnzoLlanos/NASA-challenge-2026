@@ -218,7 +218,7 @@ p {
   color: var(--text);
   font-weight: 600;
   box-shadow: 0 2px 6px rgba(15, 45, 74, 0.04);
-  transition: border-color 0.2s, box-shadow 0.2s;
+  transition: border-color 0.4s ease, box-shadow 0.4s ease;
 }
 
 .form-select:focus {
@@ -244,7 +244,7 @@ p {
   font-weight: 700;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(15, 45, 74, 0.04);
-  transition: all 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -280,7 +280,7 @@ p {
   background: #ffffff;
   cursor: pointer;
   box-shadow: 0 2px 6px rgba(15, 45, 74, 0.04);
-  transition: all 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
   user-select: none;
 }
 
@@ -495,7 +495,7 @@ p {
   cursor: pointer;
   text-align: left;
   box-shadow: 0 2px 6px rgba(15, 45, 74, 0.04);
-  transition: all 0.2s ease;
+  transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
 }
 
 .btn-open-region-map:hover {
@@ -567,6 +567,7 @@ p {
   justify-content: center;
   padding: 16px;
   z-index: 9999;
+  animation: modalOverlayFade 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
 }
 
 .region-modal-card {
@@ -580,17 +581,26 @@ p {
   flex-direction: column;
   gap: 12px;
   padding: 16px 18px;
-  animation: modalFadeIn 0.16s ease-out;
+  animation: modalSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
-@keyframes modalFadeIn {
+@keyframes modalOverlayFade {
   from {
     opacity: 0;
-    transform: scale(0.96);
   }
   to {
     opacity: 1;
-    transform: scale(1);
+  }
+}
+
+@keyframes modalSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 

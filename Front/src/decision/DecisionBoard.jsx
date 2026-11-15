@@ -200,9 +200,11 @@ function TarjetaEstrategia({ e, activa, onElegir, onOpenRules }) {
 
       <details className="comparacion">
         <summary>Comparación de indicadores</summary>
-        {METRICAS.map((m) => (
-          <Barrita key={m.key} {...m} valor={e.metricas?.[m.key]} />
-        ))}
+        <div className="desplegable-cuerpo">
+          {METRICAS.map((m) => (
+            <Barrita key={m.key} {...m} valor={e.metricas?.[m.key]} />
+          ))}
+        </div>
       </details>
 
       {Array.isArray(e.riesgos) && e.riesgos.length > 0 && (
@@ -223,11 +225,13 @@ function TarjetaEstrategia({ e, activa, onElegir, onOpenRules }) {
               ℹ️
             </button>
           </summary>
-          <ul className="riesgos-lista">
-            {e.riesgos.map((r, idx) => (
-              <li key={idx}>{r}</li>
-            ))}
-          </ul>
+          <div className="desplegable-cuerpo">
+            <ul className="riesgos-lista">
+              {e.riesgos.map((r, idx) => (
+                <li key={idx}>{r}</li>
+              ))}
+            </ul>
+          </div>
         </details>
       )}
 
@@ -291,6 +295,7 @@ function Timeline({ estrategia }) {
 
 function EvidenciaNasa({ items }) {
   const [abierto, setAbierto] = useState(false);
+  const itemsList = Array.isArray(items) ? items : [];
 
   return (
     <section className="panel nasa" aria-labelledby="n-titulo">
@@ -303,7 +308,7 @@ function EvidenciaNasa({ items }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <h2 id="n-titulo" style={{ margin: 0 }}>🛰️ ¿Qué detectó la NASA en tu lote?</h2>
           <span className="insignia azul-suave" style={{ fontSize: '11px' }}>
-            {items.length} satélites
+            {itemsList.length} satélites
           </span>
         </div>
         <span className="nasa-toggle-icono">
@@ -311,20 +316,22 @@ function EvidenciaNasa({ items }) {
         </span>
       </button>
 
-      {abierto && (
-        <div className="nasa-grid">
-          {items.map((it) => (
-            <article key={it.satelite} className={`nasa-card ${it.nivel}`}>
-              <div className="nasa-cab">
-                <span className={`insignia ${it.nivel}`}>{it.satelite}</span>
-                <strong>{it.titulo}</strong>
-              </div>
-              <p>{it.texto}</p>
-              <small>{it.dato}</small>
-            </article>
-          ))}
+      <div className={`nasa-desplegable-wrapper ${abierto ? 'abierto' : ''}`}>
+        <div className="nasa-desplegable-content">
+          <div className="nasa-grid">
+            {itemsList.map((it) => (
+              <article key={it.satelite} className={`nasa-card ${it.nivel}`}>
+                <div className="nasa-cab">
+                  <span className={`insignia ${it.nivel}`}>{it.satelite}</span>
+                  <strong>{it.titulo}</strong>
+                </div>
+                <p>{it.texto}</p>
+                <small>{it.dato}</small>
+              </article>
+            ))}
+          </div>
         </div>
-      )}
+      </div>
     </section>
   );
 }
