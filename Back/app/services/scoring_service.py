@@ -1,10 +1,12 @@
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from app.repositories.crop_repository import CropRepository
+from app.repositories.region_repository import RegionRepository
+from app.schemas.region import RegionSanLuis, Tierra
 from app.schemas.rotation import Priorities, StrategyOption, RotationResponse
 
 
 class ScoringService:
-    """Motor de cálculo y puntuación inteligente de rotaciones agrícolas."""
+    """Motor de cálculo y puntuación inteligente de estrategias de rotación agrícola por región de San Luis."""
 
     @staticmethod
     def _normalize_priorities(priorities: Priorities) -> Dict[str, float]:
@@ -19,9 +21,12 @@ class ScoringService:
         }
 
     @staticmethod
-    def evaluate_rotation_scores(crop_ids: List[str]) -> Tuple[float, float, float, float]:
+    def evaluate_rotation_scores(
+        crop_ids: List[str],
+        region: RegionSanLuis = RegionSanLuis.CENTRO,
+    ) -> Tuple[float, float, float, float]:
         """
-        Calcula las 4 notas parciales (0 a 1) para una secuencia de cultivos:
+        Calcula las 4 notas parciales (0 a 1) para una secuencia de cultivos según la región de San Luis:
         (nota_agua, nota_ingresos, nota_suelo, nota_erosion)
         """
         if not crop_ids:
@@ -38,11 +43,12 @@ class ScoringService:
 
         n = len(crops_data)
 
-        # 1. Nota Agua: Promedio de tolerancia a sequía ajustado por consumo hídrico
+        # 1. Nota Agua: Promedio de tolerancia a sequía ajustado por consumo hídrico y aridez regional
         avg_drought_tol = sum(c["drought_tolerance"] for c in crops_data) / n
         avg_water_mm = sum(c["water_consumption_mm"] for c in crops_data) / n
-        # Consumo de referencia: < 300mm es óptimo (1.0), > 500mm penaliza
-        water_demand_score = max(0.0, min(1.0, 1.0 - (avg_water_mm - 250.0) / 350.0))
+        # En el Norte (520mm) la exigencia de bajo consumo hídrico es más estricta que en Centro (680mm)
+        ref_water_mm = 220.0 if region == RegionSanLuis.NORTE else 250.0
+        water_demand_score = max(0.0, min(1.0, 1.0 - (avg_water_mm - ref_water_mm) / 350.0))
         nota_agua = round(0.6 * avg_drought_tol + 0.4 * water_demand_score, 2)
 
         # 2. Nota Ingresos: Según potencial de mercado de los cultivos
@@ -62,7 +68,9 @@ class ScoringService:
             for c in crops_data
         )
         diversity_factor = min(1.0, n / 3.0)
-        base_erosion = 0.85 if has_winter_or_cover else 0.35
+        # En el Sur (suelos arenosos y ventosos) dejar el campo desnudo penaliza más fuerte
+        unprotected_base = 0.25 if region == RegionSanLuis.SUR else 0.35
+        base_erosion = 0.88 if has_winter_or_cover else unprotected_base
         nota_erosion = round(min(1.0, base_erosion * 0.8 + diversity_factor * 0.2), 2)
 
         return nota_agua, nota_ingresos, nota_suelo, nota_erosion
@@ -71,9 +79,10 @@ class ScoringService:
     def compute_weighted_score(
         cls,
         crop_ids: List[str],
-        normalized_weights: Dict[str, float]
+        normalized_weights: Dict[str, float],
+        region: RegionSanLuis = RegionSanLuis.CENTRO,
     ) -> Tuple[float, Dict[str, float]]:
-        nota_agua, nota_ingresos, nota_suelo, nota_erosion = cls.evaluate_rotation_scores(crop_ids)
+        nota_agua, nota_ingresos, nota_suelo, nota_erosion = cls.evaluate_rotation_scores(crop_ids, region=region)
         score = (
             normalized_weights["agua"] * nota_agua
             + normalized_weights["ingresos"] * nota_ingresos
@@ -93,8 +102,15 @@ class ScoringService:
     def generate_rotation_recommendations(
         cls,
         current_rotation: List[str],
-        priorities: Priorities
+        priorities: Priorities,
+        region: Optional[RegionSanLuis] = RegionSanLuis.CENTRO,
+        tierra: Optional[Tierra] = None,
     ) -> RotationResponse:
+        # Si viene un objeto Tierra, su región tiene prioridad y ya pasó por el delimitador de San Luis
+        effective_region = tierra.region if tierra else (region or RegionSanLuis.CENTRO)
+        tierra_nombre = tierra.nombre if tierra else None
+        region_meta = RegionRepository.get_region_by_id(effective_region)
+
         norm_weights = cls._normalize_priorities(priorities)
 
         # Limpiar y reconocer rotación actual
@@ -104,21 +120,26 @@ class ScoringService:
 
         current_display_name = " → ".join(cleaned_current)
 
-        # Predefinir estrategias comparativas representativas para la zona
+        rain_mm = region_meta.precipitacion_media_anual_mm if region_meta else 650.0
+        heat_days = region_meta.dias_calor_extremo_anual if region_meta else 26
+        region_label = region_meta.nombre if region_meta else f"Región {effective_region.value.capitalize()}"
+
+        # Predefinir estrategias comparativas calibradas para la región seleccionada
         candidate_definitions = [
             {
                 "id": "current",
                 "name": current_display_name,
                 "crops": cleaned_current,
                 "is_current": True,
-                "why": "Rotación tradicional orientada a liquidez comercial a corto plazo, pero deja ventanas sin cobertura activa.",
+                "why": f"Rotación tradicional en {region_label} orientada a liquidez comercial a corto plazo, pero deja ventanas sin cobertura activa.",
                 "benefits": ["Alta liquidez comercial inmediata", "Familiaridad de manejo agronómico"],
-                "evidence": "Registros NASA POWER muestran hasta 5 meses de invierno con campo descubierto y riesgo de evaporación y erosión eólica.",
+                "evidence": f"En {region_label} ({rain_mm:.0f} mm/año), NASA POWER muestra hasta 5 meses de invierno con campo descubierto y riesgo de evaporación y erosión eólica.",
                 "evidence_details": {
                     "dataset": "NASA POWER Soil Wetness & Wind Speed (MERRA-2)",
-                    "finding": "5 meses de suelo descubierto en invierno inducen pérdidas de humedad de hasta 35 mm y riesgo erosivo eólico.",
+                    "finding": f"En {region_label}, 5 meses de suelo descubierto en invierno inducen pérdidas de humedad y riesgo erosivo eólico.",
                     "resolution": "0.5° x 0.5°",
-                    "period": "2000-2025"
+                    "period": "2000-2025",
+                    "region": effective_region.value,
                 },
                 "risks_to_validate": "Monitorear compactación, pérdida de humedad por evaporación y declive paulatino de materia orgánica.",
             },
@@ -127,18 +148,19 @@ class ScoringService:
                 "name": "Maíz → Soja → Cultivo de cobertura",
                 "crops": ["maiz", "soja", "cobertura"],
                 "is_current": False,
-                "why": "Excelente equilibrio hídrico y edáfico. El cultivo de cobertura (Vicia/Centeno) frena la erosión invernal y fija nitrógeno biológico.",
+                "why": f"Excelente equilibrio hídrico y edáfico para {region_label}. El cultivo de cobertura (Vicia/Centeno) frena la erosión invernal y fija nitrógeno biológico.",
                 "benefits": [
                     "Reduce demanda hídrica en meses críticos al mejorar infiltración",
                     "Añade materia orgánica al perfil superior",
                     "Interrumpe ciclos biológicos de malezas y plagas",
                 ],
-                "evidence": "NASA POWER registra inviernos secos (<20 mm/mes). La cobertura viva protege el suelo y minimiza evaporación directa.",
+                "evidence": f"NASA POWER registra inviernos secos (<20 mm/mes) en {region_label}. La cobertura viva protege el suelo y minimiza evaporación directa.",
                 "evidence_details": {
                     "dataset": "NASA POWER Monthly Precipitation (PRECTOTCORR)",
-                    "finding": "Inviernos con precipitaciones medias <20 mm/mes hacen crítica la retención de agua de lluvia mediante cobertura vegetal viva.",
+                    "finding": f"Inviernos secos en {region_label} hacen crítica la retención de agua mediante cobertura vegetal viva.",
                     "resolution": "0.5° x 0.5°",
-                    "period": "2000-2025"
+                    "period": "2000-2025",
+                    "region": effective_region.value,
                 },
                 "risks_to_validate": "Definir fecha óptima de secado o terminación de la cobertura con asesor técnico para no restar agua a la siembra estival.",
             },
@@ -147,18 +169,19 @@ class ScoringService:
                 "name": "Sorgo → Soja",
                 "crops": ["sorgo", "soja"],
                 "is_current": False,
-                "why": "Estrategia de alta resiliencia climática: el sorgo tolera mejor las olas de calor (>35°C) y el estrés hídrico estival.",
+                "why": f"Estrategia de alta resiliencia climática en {region_label}: el sorgo tolera mejor las olas de calor (>35°C) y el estrés hídrico estival.",
                 "benefits": [
                     "Alta resistencia a sequías y olas de calor estivales",
                     "Gran volumen de rastrojo que conserva la humedad superficial",
                     "Diversificación del sistema radicular",
                 ],
-                "evidence": "San Luis promedia 26 días de calor extremo estival donde el sorgo mantiene rendimiento fotosintético estable.",
+                "evidence": f"{region_label} promedia {heat_days} días de calor extremo estival (>35°C) donde el sorgo mantiene rendimiento fotosintético estable.",
                 "evidence_details": {
                     "dataset": "NASA POWER Daily Max Temperature (T2M_MAX)",
-                    "finding": "26 días anuales de calor extremo (T > 35°C) en San Luis; el sorgo mantiene la fotosíntesis con 30% menos consumo de agua que el maíz.",
+                    "finding": f"{heat_days} días anuales de calor extremo (T > 35°C) en {region_label}; el sorgo consume 30% menos agua que el maíz.",
                     "resolution": "0.5° x 0.5°",
-                    "period": "2000-2025"
+                    "period": "2000-2025",
+                    "region": effective_region.value,
                 },
                 "risks_to_validate": "Verificar canales comerciales y logística de entrega de sorgo en acopios zonales.",
             },
@@ -167,18 +190,19 @@ class ScoringService:
                 "name": "Trigo / Soja 2da → Maíz → Cobertura",
                 "crops": ["trigo", "soja", "maiz", "cobertura"],
                 "is_current": False,
-                "why": "Intensificación sustentable con doble cultivo que maximiza captura de carbono y cobertura continua del suelo.",
+                "why": f"Intensificación sustentable para {region_label} que maximiza captura de carbono y cobertura continua del suelo.",
                 "benefits": [
                     "Cero meses de suelo descubierto frente al viento",
                     "Doble flujo de ingresos en el año agrícola",
                     "Mayor fijación biológica y reciclaje profundo de nutrientes",
                 ],
-                "evidence": "Aprovecha pulsos de precipitación primaverales registrados por NASA POWER maximizando la eficiencia de uso del agua.",
+                "evidence": f"Aprovecha pulsos de precipitación primaverales de {region_label} ({rain_mm:.0f} mm anuales) maximizando la eficiencia de uso del agua.",
                 "evidence_details": {
                     "dataset": "NASA POWER Seasonal Precipitation Trends",
-                    "finding": "Pulsos de lluvia primaveral (septiembre a noviembre) permiten implantar trigo/soja de segunda manteniendo el balance de materia orgánica.",
+                    "finding": "Pulsos de lluvia primaveral permiten implantar cobertura continua manteniendo el balance de materia orgánica.",
                     "resolution": "0.5° x 0.5°",
-                    "period": "2000-2025"
+                    "period": "2000-2025",
+                    "region": effective_region.value,
                 },
                 "risks_to_validate": "Requiere mayor disponibilidad de agua útil inicial en el perfil previo a la siembra de trigo.",
             },
@@ -187,7 +211,11 @@ class ScoringService:
         # Calcular scores
         evaluated_strategies: List[StrategyOption] = []
         for candidate in candidate_definitions:
-            score, breakdown = cls.compute_weighted_score(candidate["crops"], norm_weights)
+            score, breakdown = cls.compute_weighted_score(
+                candidate["crops"],
+                norm_weights,
+                region=effective_region,
+            )
 
             # Ajuste fino de la justificación si el usuario prioriza fuertemente un eje
             why_text = candidate["why"]
@@ -196,7 +224,6 @@ class ScoringService:
             elif norm_weights["erosion"] >= 0.35:
                 why_text += f" (Protección contra erosión calculada: {int(breakdown['erosion'] * 100)}/100)."
 
-            # Asegurar que el actual mantenga la marca is_current
             is_curr = candidate["is_current"]
 
             strategy_opt = StrategyOption(
@@ -214,10 +241,11 @@ class ScoringService:
         # Ordenar estrategias de mayor a menor puntuación
         evaluated_strategies.sort(key=lambda s: s.score, reverse=True)
 
-        # Mejor estrategia recomendada (la de mayor puntaje)
         best_recommendation = evaluated_strategies[0].name
 
         return RotationResponse(
+            region_evaluada=effective_region,
+            tierra_nombre=tierra_nombre,
             recommendation=best_recommendation,
             strategies=evaluated_strategies,
         )
