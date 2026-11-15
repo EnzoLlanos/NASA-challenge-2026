@@ -32,8 +32,8 @@ export default function Sidebar({ config, onConfigChange, onSimulate, isLoading 
 
       <ConfigForm config={config} onChange={onConfigChange} onSubmit={onSimulate} isLoading={isLoading} />
 
-      <footer style={{ marginTop: "auto", paddingTop: 12, borderTop: "1px solid #edf2f7" }}>
-        <p style={{ margin: 0, fontSize: "0.72rem", color: "#94a3b8", textAlign: "center" }}>
+      <footer style={{ marginTop: "auto", paddingTop: 12, borderTop: "1.5px solid #c8deef" }}>
+        <p style={{ margin: 0, fontSize: "0.74rem", color: "#3b628a", textAlign: "center", fontWeight: "600" }}>
           🛰️ Datos: NASA SMAP, ECOSTRESS, GPM y MODIS. Herramienta de apoyo: no reemplaza el criterio del productor.
         </p>
       </footer>
