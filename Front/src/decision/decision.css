@@ -30,13 +30,13 @@
 .selector button, .pestanas button { border: 0; background: transparent; padding: 6px 14px; border-radius: 8px; cursor: pointer; font: inherit; color: var(--muted); }
 .selector button.on, .pestanas button.on { background: #fffdf7; color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 
-.tarjetas { display: grid; gap: 16px; align-items: start; }
+.tarjetas { display: grid; gap: 16px; align-items: stretch; }
 .tarjetas.lado { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .tarjetas.selector { grid-template-columns: minmax(260px, 520px); }
-.tarjeta { background: #fffdf7; border: 2px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; }
+.tarjeta { background: #fffdf7; border: 2px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box; }
 .tarjeta.activa { border-color: var(--azul); box-shadow: 0 4px 14px rgba(38,112,201,.15); }
-.tarjeta header { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 10px; }
-.resumen { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0 0 4px; }
+.tarjeta header { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; margin-bottom: 10px; min-height: 54px; }
+.resumen { color: var(--muted); font-size: 14px; line-height: 1.45; margin: 0 0 4px; min-height: 62px; }
 
 .medidor { width: 100%; margin: 4px 0 12px; padding: 10px 12px; background: #f6f8f6; border: 1px solid var(--line); border-radius: 10px; }
 .medidor-cab { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 8px; }
@@ -170,10 +170,18 @@ details[open]::details-content {
 }
 
 .acordeon-box.comparacion {
-  margin-top: 14px;
+  margin-top: auto;
   border: 1px solid var(--line);
   padding: 0 12px;
   background: #f6f8f6;
+}
+
+.tarjeta .secuencia {
+  margin-bottom: 14px;
+}
+
+.tarjeta .boton {
+  margin-top: 14px;
 }
 
 .acordeon-box.comparacion.abierto {
