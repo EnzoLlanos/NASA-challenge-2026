@@ -367,7 +367,7 @@ p {
 /* ---------- Área principal (Dev 2) ---------- */
 .main-dashboard {
   flex: 1;
-  padding: 32px 36px;
+  padding: 24px 36px;
   overflow-y: auto;
   max-height: 100vh;
   display: flex;

@@ -15,6 +15,19 @@ export default function WelcomeState({ selectedRegion, regionName }) {
         </p>
       </div>
 
+      {/* Mensaje de acción directo */}
+      <div className="welcome-cta">
+        <span className="cta-icon">👈</span>
+        <div className="cta-texts">
+          <strong>
+            {selectedRegion
+              ? `Zona seleccionada: ${regionName || selectedRegion.toUpperCase()}`
+              : "Seleccioná la zona en el panel izquierdo"}
+          </strong>
+          <span>Completá las opciones y presioná <strong>Simular Rotaciones</strong></span>
+        </div>
+      </div>
+
       {/* 3 Pasos rápidos en tarjetas concisas */}
       <div className="welcome-steps-card">
         <div className="steps-grid">
@@ -62,19 +75,6 @@ export default function WelcomeState({ selectedRegion, regionName }) {
             <h4>Nutrientes Naturales</h4>
             <span className="feature-tag">Fijación de nitrógeno</span>
           </div>
-        </div>
-      </div>
-
-      {/* Mensaje de acción directo */}
-      <div className="welcome-cta">
-        <span className="cta-icon">👈</span>
-        <div className="cta-texts">
-          <strong>
-            {selectedRegion
-              ? `Zona seleccionada: ${regionName || selectedRegion.toUpperCase()}`
-              : "Seleccioná la zona en el panel izquierdo"}
-          </strong>
-          <span>Completá las opciones y presioná <strong>Simular Rotaciones</strong></span>
         </div>
       </div>
     </div>

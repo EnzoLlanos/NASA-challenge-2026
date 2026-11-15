@@ -73,7 +73,7 @@
 .tarjeta.activa .boton { background: var(--azul); color: #fff; }
 
 .panel { background: #fffdf7; border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
-.panel.nasa { max-width: 760px; margin-inline: auto; background: linear-gradient(135deg, #1f4d2b, #2f6b3a); color: #fff; border: 0; }
+.panel.nasa { width: 100%; max-width: 760px; margin-inline: auto; background: linear-gradient(135deg, #1f4d2b, #2f6b3a); color: #fff; border: 0; }
 .panel.nasa h2 { color: #fff; font-size: 20px; }
 
 /* Soporte estándar para transiciones suaves y progresivas en <details> */
@@ -125,7 +125,7 @@ details[open]::details-content {
   display: grid;
   grid-template-rows: 0fr;
   opacity: 0;
-  transition: grid-template-rows 1.4s cubic-bezier(0.25, 1, 0.5, 1), opacity 1.1s ease;
+  transition: grid-template-rows 1.2s cubic-bezier(0.25, 1, 0.5, 1), opacity 0.9s ease;
 }
 
 .nasa-desplegable-wrapper.abierto {
@@ -139,6 +139,14 @@ details[open]::details-content {
 }
 
 .panel.nasa .nasa-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+  margin-top: 0;
+  transition: margin-top 1.2s cubic-bezier(0.25, 1, 0.5, 1);
+}
+
+.nasa-desplegable-wrapper.abierto .nasa-grid {
   margin-top: 16px;
 }
 .nasa-card { background: #fffdf7; color: var(--ink); border-radius: 12px; padding: 14px; border-top: 5px solid var(--azul); display: flex; flex-direction: column; gap: 8px; }
