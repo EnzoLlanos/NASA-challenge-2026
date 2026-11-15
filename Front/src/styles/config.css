@@ -1,18 +1,28 @@
 :root {
-  --green-dark: #134e2b;
-  --green: #238636;
-  --green-light: #e6f4ea;
-  /* Azul claro suave y no saturado */
-  --blue-panel-bg: #eaf2f9;
-  --blue-panel-border: #c8deef;
-  --blue-map-card: #ddecf8;
-  --blue-map-border: #bcd7ed;
-  --text-navy: #0f2d4a;
-  --text-navy-muted: #3b628a;
-  --card: #ffffff;
-  --text: #1f2937;
-  --muted: #64748b;
-  --border: #e2e8f0;
+  /* Paleta AgroNASA: marfil + verde (60/30/10) */
+  --ivory: #faf7ee;
+  --ivory-2: #efebdd;
+  --green-tint: #e4eedc;
+  --green-dark: #1f4d2b;
+  --green: #2f6b3a;
+  --green-light: #e4eedc;
+  --accent: #d99a1e;
+  --ok: #3e9b4f;
+  --warn: #e0a100;
+  --danger: #c0392b;
+  --water: #2e7fb8;
+  --soil: #8b5e3c;
+  /* Reutilizados por los paneles (antes azules) */
+  --blue-panel-bg: var(--ivory-2);
+  --blue-panel-border: #d6d0bb;
+  --blue-map-card: var(--green-tint);
+  --blue-map-border: #c3d6b8;
+  --text-navy: #1f2a1f;
+  --text-navy-muted: #4f5f4f;
+  --card: #fffdf7;
+  --text: #1f2a1f;
+  --muted: #667064;
+  --border: #e2ddca;
 }
 
 * {
@@ -24,7 +34,7 @@ body {
   font-family: -apple-system, "Segoe UI", Roboto, Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f3f6f4;
+  background-color: var(--ivory);
 }
 
 h1,
@@ -81,7 +91,7 @@ p {
 }
 
 .logo-badge {
-  background: linear-gradient(135deg, #1b662a, #238636);
+  background: linear-gradient(135deg, #1f4d2b, #2f6b3a);
   color: #fff;
   width: 46px;
   height: 46px;
@@ -136,7 +146,7 @@ p {
 .btn-demo-sanluis {
   background: #ffffff;
   color: #124326;
-  border: 1.5px solid #238636;
+  border: 1.5px solid #2f6b3a;
   padding: 8px 14px;
   border-radius: 20px;
   font-size: 0.82rem;
@@ -213,8 +223,8 @@ p {
 
 .form-select:focus {
   outline: none;
-  border-color: #0284c7;
-  box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.18);
+  border-color: #2f6b3a;
+  box-shadow: 0 0 0 3px rgba(47, 107, 58, 0.22);
 }
 
 /* Pills de Agua */
@@ -281,7 +291,7 @@ p {
 }
 
 .priority-chip.selected {
-  border-color: #0284c7;
+  border-color: #2f6b3a;
   border-width: 2px;
   background: #f0f8ff;
   box-shadow: 0 3px 10px rgba(2, 132, 199, 0.15);
@@ -320,13 +330,13 @@ p {
 .priority-checkbox {
   width: 18px;
   height: 18px;
-  accent-color: #0284c7;
+  accent-color: #2f6b3a;
   cursor: pointer;
 }
 
 /* Botón Principal Simular: Verde activo para resaltar */
 .btn-simulate {
-  background: linear-gradient(135deg, #238636, #166534);
+  background: linear-gradient(135deg, #2f6b3a, #1f4d2b);
   color: #ffffff;
   border: none;
   padding: 14px 20px;
@@ -455,7 +465,7 @@ p {
 
 .tag-success {
   background: #dcfce7;
-  color: #166534;
+  color: #1f4d2b;
 }
 
 .tag-info {
