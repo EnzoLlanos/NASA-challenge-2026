@@ -1,0 +1,176 @@
+# =============================================================================
+# data/zonas/crops_centro.yaml — Cultivos calibrados para la Zona CENTRO
+# Fuentes oficiales: NASA POWER (2000-2025), SRTM 30m, FAO GAEZ v4
+# =============================================================================
+maíz:
+  name: Maíz
+  water_consumption: 500
+  drought_tolerance: 0.3
+  nitrogen_fixation: false
+  root_depth: 150
+  soil_coverage: 0.8
+  organic_matter: 0.05
+  market_potential: alto
+  season: verano
+  cycle_months: 6
+  adaptation_notes: 'Cultivo de verano por excelencia en San Luis. Alta demanda hídrica
+
+    (500 mm/ciclo), requiere buena disponibilidad de agua en floración.
+
+    Sensible a sequía en etapa crítica (drought_tolerance 0.3).
+
+    Rastrojo alto que protege el suelo. Rotación típica: maíz → soja.
+
+    Riesgo: olas de calor (>=35°C) en enero-febrero según NASA POWER.
+
+    '
+  aptitud_zona: 0.6
+  nota_zona: Rinde bien con lluvias oportunas; riesgo moderado por golpes de calor.
+soja:
+  name: Soja
+  water_consumption: 450
+  drought_tolerance: 0.5
+  nitrogen_fixation: true
+  root_depth: 80
+  soil_coverage: 0.7
+  organic_matter: 0.03
+  market_potential: alto
+  season: verano
+  cycle_months: 5
+  adaptation_notes: 'Buena alternativa al maíz en rotación. Fija nitrógeno, deja N
+    para el
+
+    cultivo siguiente y reduce necesidad de fertilizantes. Menor demanda
+
+    hídrica que el maíz (450 vs 500 mm). Cobertura moderada. Muy común en
+
+    la rotación maíz-soja de Argentina. Sensible a heladas tardías.
+
+    '
+  aptitud_zona: 0.65
+  nota_zona: Buena opción de rotación estándar frente a cereales.
+trigo:
+  name: Trigo
+  water_consumption: 350
+  drought_tolerance: 0.8
+  nitrogen_fixation: false
+  root_depth: 120
+  soil_coverage: 0.9
+  organic_matter: 0.07
+  market_potential: medio
+  season: invierno
+  cycle_months: 7
+  adaptation_notes: 'Cultivo de invierno en San Luis: cubre el suelo justo en la época
+    en
+
+    que está desnudo (mayo-agosto), reduce erosión y evita campos
+
+    descubiertos. Alta tolerancia a sequía (0.8) — clave bajo clima
+
+    semi-árido. Precede bien al maíz de verano. Sensible a heladas
+
+    tardías (seguimiento de frost_days del pipeline) y calor prematuro.
+
+    '
+  aptitud_zona: 0.8
+  nota_zona: Muy buena opción de invierno para alternar con cultivos estivales.
+sorgo:
+  name: Sorgo
+  water_consumption: 300
+  drought_tolerance: 0.9
+  nitrogen_fixation: false
+  root_depth: 200
+  soil_coverage: 0.7
+  organic_matter: 0.04
+  market_potential: medio
+  season: verano
+  cycle_months: 5
+  adaptation_notes: 'Sustituto de maíz en años secos: consume 40% menos agua (300
+    vs 500 mm)
+
+    y raíces profundas (200 cm) que extraen humedad en capas bajas. Es el
+
+    cultivo de referencia para el componente "agua" del score en una
+
+    región semi-árida como San Luis. Menor cobertura que el maíz.
+
+    '
+  aptitud_zona: 0.8
+  nota_zona: Excelente sustituto del maíz en temporadas de baja lluvia.
+girasol:
+  name: Girasol
+  water_consumption: 300
+  drought_tolerance: 0.85
+  nitrogen_fixation: false
+  root_depth: 250
+  soil_coverage: 0.6
+  organic_matter: 0.04
+  market_potential: alto
+  season: verano
+  cycle_months: 5
+  adaptation_notes: 'Raíz de hasta 250 cm: rompe compactación y aporta agua/nutrientes
+    de
+
+    capas profundas (buen precedente para cereales). Tolera sequía (0.85).
+
+    Aceitera con mercado alto. Menor cobertura (0.6): considerar cobertura
+
+    de invierno para no dejar el suelo expuesto. Buen candidato para
+
+    rotar con trigo de invierno.
+
+    '
+  aptitud_zona: 0.8
+  nota_zona: Muy buena rentabilidad y resistencia frente a sequías cortas.
+cebada:
+  name: Cebada
+  water_consumption: 300
+  drought_tolerance: 0.85
+  nitrogen_fixation: false
+  root_depth: 100
+  soil_coverage: 0.9
+  organic_matter: 0.06
+  market_potential: medio
+  season: invierno
+  cycle_months: 6
+  adaptation_notes: 'Alternativa de invierno al trigo con menor exigencia hídrica
+    y muy
+
+    tolerante al frío. Cubre el suelo en la ventana de campo desnudo
+
+    (junio-agosto) y su rastrojo mejora la materia orgánica. Mercado
+
+    medio (cervecería/forraje) — buen complemento si la prioridad del
+
+    agricultor es suelo antes que ingresos.
+
+    '
+  aptitud_zona: 0.75
+  nota_zona: Excelente antecesor de soja de segunda por ciclo corto.
+arveja:
+  name: Arveja
+  water_consumption: 200
+  drought_tolerance: 0.75
+  nitrogen_fixation: true
+  root_depth: 60
+  soil_coverage: 0.95
+  organic_matter: 0.08
+  market_potential: bajo
+  season: cubierta
+  cycle_months: 4
+  adaptation_notes: 'Cultivo de cobertura de invierno: 95% de cobertura protege el
+    suelo
+
+    desnudo de mayo a agosto (ventana crítica de erosión en San Luis),
+
+    fija nitrógeno para el cultivo de verano siguiente y aporta el mayor
+
+    % de materia orgánica (0.08). Bajo valor de mercado directo — su
+
+    "ingreso" es el ahorro de fertilizante y la salud del suelo.
+
+    Estrategia clave para la prioridad "suelo" y "erosión" del agricultor.
+
+    '
+  aptitud_zona: 0.85
+  nota_zona: Ideal para enriquecer el suelo previo a la siembra de maíz.
