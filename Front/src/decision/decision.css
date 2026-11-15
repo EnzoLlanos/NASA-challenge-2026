@@ -1,9 +1,9 @@
 .decision {
-  --verde: #2e9e5b; --verde-bg: #e3f5ea;
+  --verde: #3e9b4f; --verde-bg: #e3f5ea;
   --ambar: #e0a100; --ambar-bg: #fdf3d6;
-  --rojo: #d6403a; --rojo-bg: #fbe4e2;
-  --azul: #2670c9; --azul-bg: #e2eefb;
-  --ink: #1d2a24; --muted: #5d6b64; --line: #dde5e0;
+  --rojo: #c0392b; --rojo-bg: #fbe4e2;
+  --azul: #2f6b3a; --azul-bg: #e2eefb;
+  --ink: #1f2a1f; --muted: #5d6b64; --line: #dde5e0;
   text-align: left; color: var(--ink); padding: 16px;
   display: flex; flex-direction: column; gap: 20px; font-size: 15px; line-height: 1.4;
 }
@@ -28,12 +28,12 @@
 .selector, .pestanas { display: inline-flex; gap: 4px; background: #eef2ef; padding: 4px; border-radius: 10px; }
 .pestanas { margin-bottom: 12px; flex-wrap: wrap; }
 .selector button, .pestanas button { border: 0; background: transparent; padding: 6px 14px; border-radius: 8px; cursor: pointer; font: inherit; color: var(--muted); }
-.selector button.on, .pestanas button.on { background: #fff; color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
+.selector button.on, .pestanas button.on { background: #fffdf7; color: var(--ink); font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,.12); }
 
 .tarjetas { display: grid; gap: 16px; }
 .tarjetas.lado { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
 .tarjetas.selector { grid-template-columns: minmax(260px, 520px); }
-.tarjeta { background: #fff; border: 2px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; }
+.tarjeta { background: #fffdf7; border: 2px solid var(--line); border-radius: 14px; padding: 16px; display: flex; flex-direction: column; }
 .tarjeta.activa { border-color: var(--azul); box-shadow: 0 4px 14px rgba(38,112,201,.15); }
 .tarjeta header { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
 .resumen { color: var(--muted); font-size: 14px; }
@@ -61,15 +61,15 @@
 .barrita-relleno.ambar { background: var(--ambar); }
 .barrita-relleno.rojo { background: var(--rojo); }
 
-.boton { margin-top: auto; padding: 9px; border-radius: 9px; border: 1px solid var(--azul); background: #fff; color: var(--azul); font: inherit; font-weight: 600; cursor: pointer; }
+.boton { margin-top: auto; padding: 9px; border-radius: 9px; border: 1px solid var(--azul); background: #fffdf7; color: var(--azul); font: inherit; font-weight: 600; cursor: pointer; }
 .tarjeta .boton { margin-top: 14px; }
 .tarjeta.activa .boton { background: var(--azul); color: #fff; }
 
-.panel { background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
-.panel.nasa { background: linear-gradient(135deg, #0b2a4a, #14467a); color: #fff; border: 0; }
+.panel { background: #fffdf7; border: 1px solid var(--line); border-radius: 14px; padding: 18px; }
+.panel.nasa { max-width: 760px; margin-inline: auto; background: linear-gradient(135deg, #1f4d2b, #2f6b3a); color: #fff; border: 0; }
 .panel.nasa h2 { color: #fff; margin-bottom: 14px; font-size: 22px; }
 .nasa-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 14px; }
-.nasa-card { background: #fff; color: var(--ink); border-radius: 12px; padding: 14px; border-top: 5px solid var(--azul); display: flex; flex-direction: column; gap: 8px; }
+.nasa-card { background: #fffdf7; color: var(--ink); border-radius: 12px; padding: 14px; border-top: 5px solid var(--azul); display: flex; flex-direction: column; gap: 8px; }
 .nasa-card.rojo { border-top-color: var(--rojo); }
 .nasa-card.verde { border-top-color: var(--verde); }
 .nasa-cab { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
