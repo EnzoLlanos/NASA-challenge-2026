@@ -508,6 +508,9 @@ export default function DecisionBoard({
             ))}
           </div>
         )}
+        <p className="estrategias-indicacion">
+          👉 Elegí una de las estrategias para ver su calendario anual y compararla en detalle.
+        </p>
         <div className={`tarjetas ${vista}`}>
           {visibles.map((e) => (
             <TarjetaEstrategia
