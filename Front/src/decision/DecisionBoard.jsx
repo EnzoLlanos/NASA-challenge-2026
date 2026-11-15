@@ -174,21 +174,41 @@ function Timeline({ estrategia }) {
 }
 
 function EvidenciaNasa({ items }) {
+  const [abierto, setAbierto] = useState(false);
+
   return (
     <section className="panel nasa" aria-labelledby="n-titulo">
-      <h2 id="n-titulo">🛰️ ¿Qué detectó la NASA en tu lote?</h2>
-      <div className="nasa-grid">
-        {items.map((it) => (
-          <article key={it.satelite} className={`nasa-card ${it.nivel}`}>
-            <div className="nasa-cab">
-              <span className={`insignia ${it.nivel}`}>{it.satelite}</span>
-              <strong>{it.titulo}</strong>
-            </div>
-            <p>{it.texto}</p>
-            <small>{it.dato}</small>
-          </article>
-        ))}
-      </div>
+      <button
+        type="button"
+        className="nasa-toggle"
+        onClick={() => setAbierto(!abierto)}
+        aria-expanded={abierto}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <h2 id="n-titulo" style={{ margin: 0 }}>🛰️ ¿Qué detectó la NASA en tu lote?</h2>
+          <span className="insignia azul-suave" style={{ fontSize: '11px' }}>
+            {items.length} satélites
+          </span>
+        </div>
+        <span className="nasa-toggle-icono">
+          {abierto ? '▲ Ocultar detalles' : '▼ Desplegar datos satelitales'}
+        </span>
+      </button>
+
+      {abierto && (
+        <div className="nasa-grid">
+          {items.map((it) => (
+            <article key={it.satelite} className={`nasa-card ${it.nivel}`}>
+              <div className="nasa-cab">
+                <span className={`insignia ${it.nivel}`}>{it.satelite}</span>
+                <strong>{it.titulo}</strong>
+              </div>
+              <p>{it.texto}</p>
+              <small>{it.dato}</small>
+            </article>
+          ))}
+        </div>
+      )}
     </section>
   );
 }
@@ -254,8 +274,8 @@ export default function DecisionBoard({ simulacion, params, isLoading: propLoadi
         </div>
       </section>
 
-      <EvidenciaNasa items={sim.evidencia_nasa} />
       <Timeline estrategia={seleccionada} />
+      <EvidenciaNasa items={sim.evidencia_nasa} />
     </div>
   );
 }
