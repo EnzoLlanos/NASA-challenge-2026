@@ -10,6 +10,12 @@ export const SAMPLE_LOT_SAN_LUIS = {
   priorities: { water: true, nutrients: true, erosion: true, forageProfit: false }
 };
 
+export const REGION_OPTIONS = [
+  { value: "norte", label: "🌵 Norte (Quines, Candelaria, Ayacucho)" },
+  { value: "centro", label: "🌱 Centro (Villa Mercedes, San Luis, Fraga)" },
+  { value: "sur", label: "🌾 Sur (Buena Esperanza, Unión, Dupuy)" }
+];
+
 export const CROP_OPTIONS = [
   { value: "Soja", label: "🌱 Soja" },
   { value: "Maíz", label: "🌽 Maíz" },

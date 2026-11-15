@@ -478,3 +478,211 @@ p {
   font-weight: 800;
   color: var(--green-dark);
 }
+
+
+/* ---------- Selector de Región con Ventana Emergente (Modal Mapa San Luis) ---------- */
+.btn-open-region-map {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  border: 1.5px solid var(--blue-panel-border);
+  background: #ffffff;
+  color: var(--text);
+  cursor: pointer;
+  text-align: left;
+  box-shadow: 0 2px 6px rgba(15, 45, 74, 0.04);
+  transition: all 0.2s ease;
+}
+
+.btn-open-region-map:hover {
+  border-color: #2f6b3a;
+  background: #f6fbf7;
+  transform: translateY(-1px);
+}
+
+.btn-open-region-map.selected {
+  border-color: #2f6b3a;
+  border-width: 2px;
+  background: #f2f9f4;
+}
+
+.btn-open-region-map.error {
+  border-color: #ef4444;
+  background: #fef2f2;
+}
+
+.btn-region-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.btn-region-icon {
+  font-size: 1.35rem;
+  flex-shrink: 0;
+}
+
+.btn-region-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.btn-region-title {
+  font-size: 0.9rem;
+  font-weight: 750;
+  color: var(--text-navy);
+}
+
+.btn-region-subtitle {
+  font-size: 0.74rem;
+  color: var(--text-navy-muted);
+}
+
+.btn-region-badge {
+  background: var(--green-tint);
+  color: var(--green-dark);
+  border: 1px solid #b7d3bd;
+  padding: 5px 10px;
+  border-radius: 16px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Modal emergente del mapa satelital */
+.region-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 16, 10, 0.72);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 9999;
+}
+
+.region-modal-card {
+  background: #111c14;
+  border: 1.5px solid #2f4f38;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 620px;
+  box-shadow: 0 22px 55px rgba(0, 0, 0, 0.55);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px 18px;
+  animation: modalFadeIn 0.16s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.region-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.region-modal-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #f8fafc;
+}
+
+.region-modal-header p {
+  margin: 2px 0 0;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+}
+
+.region-modal-close {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.region-modal-close:hover {
+  background: #ef4444;
+  border-color: #ef4444;
+  color: #ffffff;
+}
+
+.region-leaflet-container {
+  height: 550px;
+  width: 100%;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1.5px solid #2f4f38;
+  background: #0a120d;
+}
+
+/* Etiquetas de los 9 departamentos (referencia no seleccionable) */
+.dept-map-label {
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dept-map-label span {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.78);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.95), 0 0 6px rgba(0, 0, 0, 0.85);
+  white-space: nowrap;
+  letter-spacing: 0.02em;
+}
+
+/* Etiquetas principales de las 3 Zonas (NORTE, CENTRO, SUR) */
+.zone-map-label {
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.zone-pill {
+  background: rgba(15, 23, 18, 0.88);
+  color: #ffffff;
+  border: 2px solid var(--zone-color, #22c55e);
+  padding: 4px 14px;
+  border-radius: 20px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.65);
+  white-space: nowrap;
+}
+
+.zone-pill.active {
+  background: var(--zone-color, #22c55e);
+  color: #09130c;
+  border-color: #ffffff;
+}

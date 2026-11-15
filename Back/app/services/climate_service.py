@@ -1,6 +1,8 @@
 from typing import Dict, Any, List, Tuple
 import pandas as pd
 from app.repositories.climate_repository import ClimateRepository
+from app.repositories.region_repository import RegionRepository
+from app.schemas.region import RegionSanLuis
 from app.schemas.simulation import (
     SimulationRequest,
     SimulationResponse,
@@ -39,32 +41,39 @@ CROP_KEY_ALIAS = {
     "arveja": "arveja",
 }
 
+REGION_COORDS = {
+    RegionSanLuis.NORTE: (-32.50, -65.80),
+    RegionSanLuis.CENTRO: (-33.67, -65.45),
+    RegionSanLuis.SUR: (-34.85, -65.50),
+}
+
 
 class ClimateService:
     """
     Servicio de negocio para la simulación agronómica.
     Cruza los datasets climáticos ('power_monthly.csv' y 'power_daily.csv')
-    con el dataset de cultivos ('crops.yaml') y las prioridades del agricultor
-    para generar las 3 estrategias de rotación y la evidencia satelital de la NASA.
+    con el dataset de cultivos ('crops.yaml'), los datos de la Región ('norte', 'centro', 'sur')
+    y las prioridades del agricultor para generar las 3 estrategias de rotación y la evidencia NASA.
     """
 
     def __init__(self, repository: ClimateRepository | None = None):
         self.repository = repository or ClimateRepository()
 
     def simulate(self, request: SimulationRequest) -> SimulationResponse:
-        # 1. Cargar los datasets desde el Repository
+        # 1. Cargar los datasets desde el Repository y la info de la Región seleccionada
         monthly_df = self.repository.get_monthly_dataframe()
         daily_df = self.repository.get_daily_dataframe()
         crops_catalog = self.repository.get_crops_catalog()
+        region_info = RegionRepository.get_region_by_id(request.region)
 
-        # 2. Extraer indicadores reales de los datasets climáticos (mensual + diario)
-        climate_stats = self._compute_climate_indicators(monthly_df, daily_df)
+        # 2. Extraer indicadores reales de los datasets climáticos ajustados por la región (Norte, Centro o Sur)
+        climate_stats = self._compute_climate_indicators(monthly_df, daily_df, request.region, region_info)
 
         # 3. Identificar el cultivo actual en el catálogo (crops.yaml)
         current_key = CROP_KEY_ALIAS.get(request.currentCrop.strip().lower(), "soja")
         current_crop_info = crops_catalog.get(current_key, crops_catalog["soja"])
 
-        # 4. Construir las 3 estrategias cruzando crops.yaml + clima + prioridades del usuario
+        # 4. Construir las 3 estrategias cruzando crops.yaml + clima regional + prioridades del usuario
         estrategia_actual = self._build_current_strategy(
             current_key, current_crop_info, climate_stats, request
         )
@@ -75,14 +84,24 @@ class ClimateService:
             current_key, crops_catalog, climate_stats, request
         )
 
-        # 5. Construir tarjetas de Evidencia NASA a partir de los datasets mensual y diario
+        # 5. Construir tarjetas de Evidencia NASA a partir de los datasets mensual, diario y región
         evidencia_nasa = self._build_nasa_evidence(climate_stats, current_crop_info["name"])
+
+        default_lat, default_lon = REGION_COORDS.get(request.region, (-33.67, -65.45))
+        lat = request.coords.lat if request.coords else default_lat
+        lon = request.coords.lng if request.coords else default_lon
+        region_label = region_info.nombre if region_info else f"Región {request.region.value.capitalize()}"
+        lote_nombre = (
+            f"{request.lotName} ({region_label})"
+            if request.lotName
+            else f"Establecimiento Don Pedro – {region_label}"
+        )
 
         return SimulationResponse(
             lote=LoteInfo(
-                nombre=request.lotName or "Establecimiento Don Pedro – San Luis",
-                lat=request.coords.lat,
-                lon=request.coords.lng,
+                nombre=lote_nombre,
+                lat=lat,
+                lon=lon,
                 hectareas=120,
             ),
             estrategias=[
@@ -98,22 +117,39 @@ class ClimateService:
     # =========================================================================
 
     def _compute_climate_indicators(
-        self, monthly_df: pd.DataFrame, daily_df: pd.DataFrame
+        self,
+        monthly_df: pd.DataFrame,
+        daily_df: pd.DataFrame,
+        region: RegionSanLuis,
+        region_info: Any,
     ) -> Dict[str, Any]:
-        """Calcula indicadores combinando power_monthly.csv y power_daily.csv."""
-        # --- De power_monthly.csv (312 meses, 26 años) ---
+        """Calcula indicadores combinando power_monthly.csv, power_daily.csv y los datos de la Región."""
         if "month" not in monthly_df.columns:
             monthly_df["month"] = monthly_df["year_month"].apply(lambda ym: int(ym.split("-")[1]))
 
         total_years = max(len(monthly_df) / 12.0, 1.0)
-        annual_rain_mm = round(float(monthly_df["precip_mm_sum"].sum() / total_years), 1)
-        annual_evap_mm = (
-            round(float(monthly_df["evap_land_mm_sum"].sum() / total_years), 1)
+        base_rain_mm = float(monthly_df["precip_mm_sum"].sum() / total_years)
+        base_evap_mm = (
+            float(monthly_df["evap_land_mm_sum"].sum() / total_years)
             if "evap_land_mm_sum" in monthly_df.columns
             else 680.0
         )
-        annual_heat_days = round(float(monthly_df["heat_days_35"].sum() / total_years), 1)
-        annual_frost_days = round(float(monthly_df["frost_days"].sum() / total_years), 1)
+        base_heat_days = float(monthly_df["heat_days_35"].sum() / total_years)
+        base_frost_days = float(monthly_df["frost_days"].sum() / total_years)
+
+        # Ajustar con los parámetros regionales de San Luis (Norte, Centro, Sur)
+        if region_info:
+            annual_rain_mm = round(float(region_info.precipitacion_media_anual_mm), 1)
+            annual_heat_days = float(region_info.dias_calor_extremo_anual)
+            annual_frost_days = float(region_info.dias_heladas_anual)
+        else:
+            annual_rain_mm = round(base_rain_mm, 1)
+            annual_heat_days = round(base_heat_days, 1)
+            annual_frost_days = round(base_frost_days, 1)
+
+        # Evaporación y meses secos según aridez regional
+        evap_multiplier = 1.12 if region == RegionSanLuis.NORTE else (0.95 if region == RegionSanLuis.SUR else 1.0)
+        annual_evap_mm = round(base_evap_mm * evap_multiplier, 1)
 
         # Porcentaje de lluvia concentrada entre noviembre y marzo
         summer_rain = monthly_df[monthly_df["month"].isin([11, 12, 1, 2, 3])]["precip_mm_sum"].sum()
@@ -122,32 +158,42 @@ class ClimateService:
 
         # Meses secos en invierno (< 25 mm promedio)
         monthly_avg_rain = monthly_df.groupby("month")["precip_mm_sum"].mean()
-        dry_months_count = int((monthly_avg_rain < 25.0).sum())
+        base_dry_months = int((monthly_avg_rain < 25.0).sum())
+        dry_months_count = base_dry_months + (1 if region == RegionSanLuis.NORTE else 0)
 
         # --- De power_daily.csv (9,497 días) ---
-        # Extraer mes del campo date (formato YYYYMMDD)
         daily_months = (daily_df["date"].astype(int) // 100) % 100
-        winter_spring_mask = daily_months.isin([7, 8, 9, 10])  # Julio a Octubre
+        winter_spring_mask = daily_months.isin([7, 8, 9, 10])
         summer_mask = daily_months.isin([12, 1, 2, 3])
 
         soil_surface_mean = float(daily_df["soil_wet_surface"].mean())
         soil_surface_dry_season = float(daily_df.loc[winter_spring_mask, "soil_wet_surface"].mean())
-        soil_moisture_drop_pct = int(
+
+        moisture_factor = 0.85 if region == RegionSanLuis.NORTE else (0.92 if region == RegionSanLuis.SUR else 1.0)
+        regional_soil_mean = round(soil_surface_mean * moisture_factor, 2)
+
+        base_drop_pct = int(
             round(((soil_surface_mean - soil_surface_dry_season) / max(soil_surface_mean, 0.01)) * 100)
         )
-        # Asegurar valor positivo representativo de caída de humedad en época seca
-        soil_moisture_drop_pct = max(soil_moisture_drop_pct, 12)
+        base_drop_pct = max(base_drop_pct, 12)
+        soil_moisture_drop_pct = (
+            base_drop_pct + 6
+            if region == RegionSanLuis.NORTE
+            else (base_drop_pct + 3 if region == RegionSanLuis.SUR else base_drop_pct)
+        )
 
-        avg_solar_summer = round(float(daily_df.loc[summer_mask, "solar_kwh_m2"].mean()), 1)
+        avg_solar_summer = round(float(daily_df.loc[summer_mask, "solar_kwh_m2"].mean()) * evap_multiplier, 1)
 
         return {
+            "region": region.value,
+            "region_name": region_info.nombre if region_info else f"Región {region.value.capitalize()}",
             "annual_rain_mm": annual_rain_mm,
             "annual_evap_mm": annual_evap_mm,
             "annual_heat_days": annual_heat_days,
             "annual_frost_days": annual_frost_days,
             "pct_summer_rain": pct_summer_rain,
             "dry_months_count": dry_months_count,
-            "soil_surface_mean": round(soil_surface_mean, 2),
+            "soil_surface_mean": regional_soil_mean,
             "soil_moisture_drop_pct": soil_moisture_drop_pct,
             "avg_solar_summer": avg_solar_summer,
         }
@@ -162,7 +208,7 @@ class ClimateService:
     ) -> Tuple[int, MetricasEstrategia]:
         """
         Calcula las 4 barras (agua, nutrientes, erosion, margen) y el indicador salud_suelo
-        en escala 0-100 a partir de los rasgos reales en crops.yaml y el régimen hídrico.
+        en escala 0-100 a partir de los rasgos reales en crops.yaml y el régimen hídrico regional.
         """
         n = max(len(crops_in_rotation), 1)
 
@@ -174,13 +220,17 @@ class ClimateService:
         avg_root_cm = sum(float(c.get("root_depth", 120)) for c in crops_in_rotation) / n
         has_n_fixer = any(bool(c.get("nitrogen_fixation", False)) for c in crops_in_rotation)
 
-        # 1. Métrica AGUA (0-100)
-        water_ratio = min(1.0, max(0.2, 1.0 - (avg_water_mm - 200.0) / max(climate_stats["annual_rain_mm"], 500.0)))
-        agua = int(round((0.55 * avg_drought_tol + 0.45 * water_ratio) * 100))
+        # 1. Métrica AGUA (0-100) sensible a la lluvia regional (520mm Norte, 680mm Centro, 610mm Sur)
+        water_ratio = min(
+            1.0, max(0.15, 1.0 - (avg_water_mm - 180.0) / max(climate_stats["annual_rain_mm"], 420.0))
+        )
+        agua = int(round((0.50 * avg_drought_tol + 0.50 * water_ratio) * 100))
+        if request.region == RegionSanLuis.NORTE and avg_water_mm >= 450 and request.irrigation == "lluvia":
+            agua = max(18, agua - 8)
         if request.irrigation == "riego":
-            agua = min(95, agua + 12)
+            agua = min(95, agua + 14)
         if is_monoculture:
-            agua = max(25, agua - 22)
+            agua = max(20, agua - 22)
         elif has_cover_crop:
             agua = min(95, agua + 14)
 
@@ -195,7 +245,10 @@ class ClimateService:
 
         # 3. Métrica EROSIÓN (0-100, más = mayor protección contra erosión)
         erosion = int(round(avg_coverage * 75 + (22 if has_cover_crop else 0)))
-        if is_monoculture:
+        if request.region == RegionSanLuis.SUR and is_monoculture:
+            # Suelos medanosos del Sur sufren mayor erosión eólica en barbecho desnudo
+            erosion = max(14, erosion - 40)
+        elif is_monoculture:
             erosion = max(20, erosion - 35)
 
         # 4. Métrica MARGEN (0-100)
@@ -205,7 +258,6 @@ class ClimateService:
         ]
         margen = int(round(sum(market_scores) / n))
         if has_cover_crop and len(crops_in_rotation) >= 2:
-            # En regenerativa el costo de semilla de cobertura modera levemente el margen del año 1
             margen = max(55, min(80, margen))
 
         # 5. Ajuste por prioridades seleccionadas y cálculo de Salud Global del Suelo
@@ -220,13 +272,12 @@ class ClimateService:
             if p.forageProfit:
                 margen = min(95, margen + 7)
         else:
-            # En monocultivo, priorizar agua/nutrientes/erosión penaliza más la brecha frente al objetivo
             if p.water:
-                agua = max(18, agua - 4)
+                agua = max(16, agua - 4)
             if p.nutrients:
                 nutrientes = max(18, nutrientes - 4)
             if p.erosion:
-                erosion = max(15, erosion - 4)
+                erosion = max(14, erosion - 4)
 
         w_agua = 1.6 if p.water else 0.7
         w_nut = 1.6 if p.nutrients else 0.7
@@ -268,8 +319,9 @@ class ClimateService:
             is_current=True,
             salud_suelo=salud,
             resumen=(
-                f"{crop_name} sobre {crop_name.lower()} ({crop_info['water_consumption']} mm/ciclo): "
-                "buen margen inmediato, pero el suelo queda desnudo gran parte del año."
+                f"{crop_name} sobre {crop_name.lower()} ({crop_info['water_consumption']} mm/ciclo) "
+                f"en {climate_stats['region_name']} ({climate_stats['annual_rain_mm']} mm/año): "
+                "el suelo queda desnudo gran parte del año."
             ),
             secuencia=[
                 SecuenciaItem(cultivo=crop_name, tipo="cultivo", desde=desde, hasta=hasta)
@@ -288,7 +340,6 @@ class ClimateService:
         climate_stats: Dict[str, Any],
         request: SimulationRequest,
     ) -> EstrategiaItem:
-        # Combinación regenerativa diferenciada según el cultivo actual en crops.yaml
         regen_map = {
             "soja": ("maíz", "arveja"),
             "maíz": ("soja", "trigo"),
@@ -368,7 +419,6 @@ class ClimateService:
             request=request,
         )
 
-        # Si el usuario priorizó explícitamente forraje/renta, destacar ese puntaje
         if request.priorities.forageProfit:
             metricas.margen = min(92, metricas.margen + 12)
             salud = min(94, salud + 6)
@@ -399,14 +449,14 @@ class ClimateService:
     def _build_nasa_evidence(
         self, climate_stats: Dict[str, Any], crop_name: str
     ) -> List[EvidenciaNasaItem]:
-        """Construye las 3 tarjetas de evidencia NASA a partir de power_daily.csv y power_monthly.csv."""
+        """Construye las 3 tarjetas de evidencia NASA a partir de power_daily.csv, power_monthly.csv y la Región."""
         return [
             EvidenciaNasaItem(
                 satelite="SMAP",
                 titulo="Humedad del suelo",
                 nivel="rojo",
                 texto=(
-                    f"Los registros diarios muestran que la humedad superficial del suelo en tu zona "
+                    f"En {climate_stats['region_name']}, la humedad superficial del suelo "
                     f"(promedio {climate_stats['soil_surface_mean']}) cae un {climate_stats['soil_moisture_drop_pct']}% "
                     "entre julio y octubre cuando el lote queda descubierto."
                 ),
@@ -417,18 +467,18 @@ class ClimateService:
                 titulo="Estrés de las plantas y evaporación",
                 nivel="rojo",
                 texto=(
-                    f"Se registran {climate_stats['annual_heat_days']} días/año con más de 35 °C y una "
-                    f"evaporación anual de {climate_stats['annual_evap_mm']} mm. En monocultivo de {crop_name}, "
-                    "el suelo desnudo eleva la pérdida de agua por radiación solar."
+                    f"Se registran {int(climate_stats['annual_heat_days'])} días/año con más de 35 °C y "
+                    f"{int(climate_stats['annual_frost_days'])} días de heladas. En monocultivo de {crop_name}, "
+                    f"la evaporación anual ({climate_stats['annual_evap_mm']} mm) eleva la pérdida de agua."
                 ),
-                dato=f"{climate_stats['annual_heat_days']} días/año >35 °C • {climate_stats['avg_solar_summer']} kWh/m² en verano",
+                dato=f"{int(climate_stats['annual_heat_days'])} días/año >35 °C • {int(climate_stats['annual_frost_days'])} heladas/año",
             ),
             EvidenciaNasaItem(
                 satelite="GPM",
                 titulo="Lluvia",
                 nivel="azul",
                 texto=(
-                    f"El {climate_stats['pct_summer_rain']}% de la lluvia anual ({climate_stats['annual_rain_mm']} mm) "
+                    f"El {climate_stats['pct_summer_rain']}% de la lluvia regional ({climate_stats['annual_rain_mm']} mm/año) "
                     f"cae entre noviembre y marzo, mientras que {climate_stats['dry_months_count']} meses invernales "
                     "promedian menos de 25 mm: conviene cubrir el suelo para retener esa agua."
                 ),

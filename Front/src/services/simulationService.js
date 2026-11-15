@@ -6,10 +6,10 @@ import api from './api.js';
  */
 
 /**
- * Ejecuta la simulación de rotaciones enviando la configuración del lote a la API.
+ * Ejecuta la simulación de rotaciones enviando la configuración del lote y región a la API.
  *
  * @param {Object} params - Datos de entrada del agricultor
- * @param {{ lat: number, lng: number }} params.coords - Coordenadas del lote
+ * @param {"norte" | "centro" | "sur"} params.region - Región seleccionada de San Luis
  * @param {string} params.currentCrop - Cultivo actual (ej: "Soja", "Maíz")
  * @param {"lluvia" | "riego"} params.irrigation - Régimen de agua
  * @param {{ water: boolean, nutrients: boolean, erosion: boolean, forageProfit: boolean }} params.priorities - Prioridades
@@ -18,10 +18,7 @@ import api from './api.js';
  */
 export async function simulateRotations(params) {
   const payload = {
-    coords: {
-      lat: Number(params.coords?.lat ?? -33.675),
-      lng: Number(params.coords?.lng ?? -65.457),
-    },
+    region: params.region || 'centro',
     currentCrop: params.currentCrop || 'Soja',
     irrigation: params.irrigation || 'lluvia',
     priorities: {

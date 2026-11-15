@@ -1,14 +1,20 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Sidebar from "./components/config/Sidebar";
 import { SAMPLE_LOT_SAN_LUIS } from "./data/mockData";
 import "./styles/config.css";
 import DecisionBoard from "./decision/DecisionBoard.jsx";
 import { simulateRotations } from "./services/simulationService.js";
 
+const REGION_LABELS = {
+  norte: "Región Norte",
+  centro: "Región Centro",
+  sur: "Región Sur",
+};
+
 export default function App() {
-  // Estado de configuración del lote (Dev 1)
+  // Estado de configuración del lote (con región por defecto vacía "---")
   const [config, setConfig] = useState({
-    coords: SAMPLE_LOT_SAN_LUIS.coords,
+    region: "",
     currentCrop: "Soja",
     irrigation: "lluvia",
     priorities: {
@@ -39,13 +45,9 @@ export default function App() {
     }
   };
 
-  // Cargar simulación inicial con el lote por defecto al abrir la aplicación
-  useEffect(() => {
-    runSimulation(config);
-  }, []);
-
   // Acción del botón principal "Simular Rotaciones"
   const handleSimulate = () => {
+    if (!config.region) return;
     runSimulation(config);
   };
 
@@ -65,9 +67,9 @@ export default function App() {
           <div className="dashboard-title">
             <h2>Tablero de Decisión Agronómica</h2>
             <p>
-              Campo evaluado: <strong>{config.lotName || "Lote seleccionado"}</strong> (
-              {config.coords.lat}, {config.coords.lng}) &bull; Cultivo actual:{" "}
-              <strong>{config.currentCrop}</strong>
+              Campo evaluado: <strong>{config.lotName || "Lote seleccionado"}</strong> &bull;{" "}
+              Zona: <strong>{REGION_LABELS[config.region] || "Sin seleccionar (---)"}</strong> &bull;{" "}
+              Cultivo actual: <strong>{config.currentCrop}</strong>
             </p>
           </div>
           <div className="nasa-tag">
@@ -92,7 +94,11 @@ export default function App() {
         )}
 
         {/* Bloques 2 y 3: tablero de decisión + evidencia NASA + timeline */}
-        <DecisionBoard simulacion={simulationData} params={config} isLoading={isLoading} />
+        <DecisionBoard
+          simulacion={simulationData}
+          params={config.region ? config : null}
+          isLoading={isLoading}
+        />
       </main>
     </div>
   );

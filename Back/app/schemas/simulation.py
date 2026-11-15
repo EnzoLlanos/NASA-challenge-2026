@@ -1,5 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
+from app.schemas.region import RegionSanLuis
 
 
 # =============================================================================
@@ -54,11 +55,16 @@ class SimulationPriorities(BaseModel):
 
 class SimulationRequest(BaseModel):
     """Payload JSON que envía el formulario ConfigForm.jsx al simular."""
-    coords: Coordinates
+    region: RegionSanLuis = Field(
+        default=RegionSanLuis.CENTRO,
+        example="centro",
+        description="Región de San Luis seleccionada: 'norte', 'centro' o 'sur'",
+    )
     currentCrop: str = Field(..., example="Soja", description="Cultivo que viene sembrando el productor")
     irrigation: str = Field(default="lluvia", example="lluvia", description="Régimen de agua: 'lluvia' o 'riego'")
     priorities: SimulationPriorities
     lotName: Optional[str] = Field(default="Establecimiento Don Pedro - San Luis", description="Nombre del lote")
+    coords: Optional[Coordinates] = Field(default=None, description="Coordenadas opcionales por compatibilidad")
 
 
 # =============================================================================
