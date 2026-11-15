@@ -1,3 +1,5 @@
+import json
+from pathlib import Path
 from typing import Dict, List, Optional
 from app.schemas.region import (
     RegionSanLuis,
@@ -7,6 +9,8 @@ from app.schemas.region import (
     CondicionCampoPregunta,
     Usuario,
     Tierra,
+    CampanaAnterior,
+    DecisionFuturaGuardada,
 )
 
 
@@ -157,11 +161,15 @@ REGIONS_DATABASE: Dict[RegionSanLuis, dict] = {
     },
 }
 
-# Base en memoria de Usuarios con su array de Tierras para pruebas e integración
+# Base en memoria y persistencia JSON de Usuarios con su perfil e historial de campañas
+PROFILE_STORAGE_PATH = Path(__file__).resolve().parents[2] / "data" / "profiles_history.json"
+
 USERS_DATABASE: Dict[str, Usuario] = {
     "usr-1": Usuario(
         id="usr-1",
-        nombre="Productor Demo San Luis",
+        nombre="Productor San Luis",
+        establecimiento="Establecimiento Don Pedro",
+        region_principal=RegionSanLuis.CENTRO,
         tierras=[
             Tierra(
                 nombre="Establecimiento Don Pedro",
@@ -188,8 +196,54 @@ USERS_DATABASE: Dict[str, Usuario] = {
                 lon=-65.50,
             ),
         ],
+        historial_campanas=[
+            CampanaAnterior(
+                id="camp-1",
+                campana="2023/24",
+                cultivo="Soja",
+                cobertura_invernal=False,
+                resultado="regular",
+                problema_principal="sequia",
+                notas="Verano seco y barbecho largo sin cobertura.",
+            ),
+            CampanaAnterior(
+                id="camp-2",
+                campana="2024/25",
+                cultivo="Soja",
+                cobertura_invernal=False,
+                resultado="malo",
+                problema_principal="erosion",
+                notas="Se repitió soja sobre rastrojo escaso; hubo escurrimiento y pérdida de suelo.",
+            ),
+        ],
+        decisiones_futuras=[],
     )
 }
+
+
+def _load_persisted_users() -> None:
+    if PROFILE_STORAGE_PATH.is_file():
+        try:
+            raw = json.loads(PROFILE_STORAGE_PATH.read_text(encoding="utf-8"))
+            for uid, udata in raw.items():
+                USERS_DATABASE[uid] = Usuario(**udata)
+        except Exception:
+            pass
+
+
+def _persist_users() -> None:
+    try:
+        PROFILE_STORAGE_PATH.parent.mkdir(parents=True, exist_ok=True)
+        serialized = {uid: u.model_dump(mode="json") for uid, u in USERS_DATABASE.items()}
+        PROFILE_STORAGE_PATH.write_text(
+            json.dumps(serialized, ensure_ascii=False, indent=2),
+            encoding="utf-8",
+        )
+    except Exception:
+        pass
+
+
+_load_persisted_users()
 
 
 class RegionRepository:
@@ -263,10 +317,11 @@ class RegionRepository:
 
     @staticmethod
     def save_user(usuario: Usuario) -> Usuario:
-        """Guarda o actualiza un usuario y su lista de tierras."""
+        """Guarda o actualiza un usuario y su lista de tierras e historial."""
         if not usuario.id:
             usuario.id = f"usr-{len(USERS_DATABASE) + 1}"
         USERS_DATABASE[usuario.id] = usuario
+        _persist_users()
         return usuario
 
     @staticmethod
@@ -276,4 +331,39 @@ class RegionRepository:
         if not usuario:
             return None
         usuario.tierras.append(tierra)
+        _persist_users()
+        return usuario
+
+    @staticmethod
+    def add_campaign_to_user(user_id: str, campana: CampanaAnterior) -> Optional[Usuario]:
+        """Agrega una campaña anterior al historial del usuario."""
+        usuario = USERS_DATABASE.get(user_id)
+        if not usuario:
+            return None
+        if not campana.id:
+            campana.id = f"camp-{len(usuario.historial_campanas) + 1}-{campana.campana.replace('/', '-')}"
+        usuario.historial_campanas.append(campana)
+        _persist_users()
+        return usuario
+
+    @staticmethod
+    def remove_campaign_from_user(user_id: str, campana_id: str) -> Optional[Usuario]:
+        """Elimina una campaña anterior del historial del usuario."""
+        usuario = USERS_DATABASE.get(user_id)
+        if not usuario:
+            return None
+        usuario.historial_campanas = [c for c in usuario.historial_campanas if c.id != campana_id]
+        _persist_users()
+        return usuario
+
+    @staticmethod
+    def add_decision_to_user(user_id: str, decision: DecisionFuturaGuardada) -> Optional[Usuario]:
+        """Guarda una decisión futura elegida por el productor en su historial."""
+        usuario = USERS_DATABASE.get(user_id)
+        if not usuario:
+            return None
+        if not decision.id:
+            decision.id = f"dec-{len(usuario.decisiones_futuras) + 1}"
+        usuario.decisiones_futuras.insert(0, decision)
+        _persist_users()
         return usuario

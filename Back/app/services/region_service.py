@@ -7,6 +7,8 @@ from app.schemas.region import (
     DelimiterInfoResponse,
     Usuario,
     Tierra,
+    CampanaAnterior,
+    DecisionFuturaGuardada,
     MIN_PORCENTAJE_TIERRA_EN_SAN_LUIS,
 )
 from app.repositories.region_repository import RegionRepository
@@ -114,5 +116,44 @@ class RegionService:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail=f"Usuario '{user_id}' no encontrado para asociar la tierra '{tierra.nombre}'.",
+            )
+        return updated
+
+    @staticmethod
+    def update_user_profile(user_id: str, usuario: Usuario) -> Usuario:
+        """Actualiza el perfil completo e historial de campañas de un usuario."""
+        usuario.id = user_id
+        return RegionRepository.save_user(usuario)
+
+    @staticmethod
+    def add_campana_to_user(user_id: str, campana: CampanaAnterior) -> Usuario:
+        """Agrega una campaña anterior al historial del productor."""
+        updated = RegionRepository.add_campaign_to_user(user_id, campana)
+        if not updated:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Usuario '{user_id}' no encontrado.",
+            )
+        return updated
+
+    @staticmethod
+    def remove_campana_from_user(user_id: str, campana_id: str) -> Usuario:
+        """Elimina una campaña anterior del historial del productor."""
+        updated = RegionRepository.remove_campaign_from_user(user_id, campana_id)
+        if not updated:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Usuario '{user_id}' no encontrado.",
+            )
+        return updated
+
+    @staticmethod
+    def add_decision_to_user(user_id: str, decision: DecisionFuturaGuardada) -> Usuario:
+        """Registra una decisión futura elegida por el productor."""
+        updated = RegionRepository.add_decision_to_user(user_id, decision)
+        if not updated:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=f"Usuario '{user_id}' no encontrado.",
             )
         return updated

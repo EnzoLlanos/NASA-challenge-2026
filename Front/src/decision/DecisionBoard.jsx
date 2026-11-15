@@ -367,8 +367,95 @@ function AvisoAgronomo() {
   );
 }
 
+function PanelHistorialDecision({ diag, profile, seleccionada, onSaveDecision }) {
+  const [abierto, setAbierto] = useState(false);
+  const [savedId, setSavedId] = useState(null);
+  const campanas = profile?.historial_campanas || [];
+
+  const resumen =
+    diag?.resumen_historial ||
+    (campanas.length > 0
+      ? `${campanas.length} campaña(s) en tu historial (${campanas
+          .map((c) => `${c.campana}: ${c.cultivo}`)
+          .join(', ')})`
+      : null);
+
+  if (!resumen) return null;
+
+  const impactos =
+    Array.isArray(diag?.impacto_decisiones) && diag.impacto_decisiones.length > 0
+      ? diag.impacto_decisiones
+      : [
+          'Se analizaron tus campañas previas para penalizar la repetición de monocultivo y priorizar cultivos que recuperen cobertura y fertilidad.',
+        ];
+
+  const handleGuardar = () => {
+    if (!seleccionada || !onSaveDecision) return;
+    onSaveDecision(seleccionada);
+    setSavedId(seleccionada.id);
+  };
+
+  return (
+    <section
+      className={`panel historial-decision-panel ${abierto ? 'abierto' : ''}`}
+      aria-label="Diagnóstico por historial de campañas"
+    >
+      <button
+        type="button"
+        className="historial-toggle"
+        onClick={() => setAbierto(!abierto)}
+        aria-expanded={abierto}
+      >
+        <div className="historial-toggle-left">
+          <h3>📋 Decisiones futuras guiadas por tu Historial de Campañas</h3>
+          <span className="insignia verde" style={{ fontSize: '11px' }}>
+            {campanas.length || diag?.campanas_analizadas || 1} campaña(s)
+          </span>
+        </div>
+        <span className="historial-toggle-icono">
+          {abierto ? '▲ Ocultar detalles' : '▼ Ver diagnóstico e impacto'}
+        </span>
+      </button>
+
+      <div className={`acordeon-desplegable ${abierto ? 'abierto' : ''}`}>
+        <div className="acordeon-inner">
+          <div className="historial-decision-body">
+            <div className="historial-decision-top">
+              <p className="sub" style={{ margin: 0 }}>
+                <strong>Antecedentes del lote:</strong> {resumen}
+              </p>
+              {seleccionada && onSaveDecision && (
+                <button
+                  type="button"
+                  className={`btn-save-decision ${savedId === seleccionada.id ? 'saved' : ''}`}
+                  onClick={handleGuardar}
+                >
+                  {savedId === seleccionada.id
+                    ? '✓ Decisión futura guardada en tu perfil'
+                    : `💾 Guardar "${seleccionada.nombre}" para próxima campaña`}
+                </button>
+              )}
+            </div>
+            <ul className="historial-impacto-lista">
+              {impactos.map((imp, i) => (
+                <li key={i}>{imp}</li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 // Bloques 2 y 3. Props opcionales: `simulacion` (objeto ya cargado) o `params` para el fetch.
-export default function DecisionBoard({ simulacion, params, isLoading: propLoading }) {
+export default function DecisionBoard({
+  simulacion,
+  params,
+  isLoading: propLoading,
+  profile,
+  onSaveDecision,
+}) {
   const { data: fetched, loading: hookLoading, mock } = useSimulation(simulacion ? null : params);
   const sim = simulacion ?? fetched;
   const isMock = !simulacion && mock;
@@ -390,6 +477,12 @@ export default function DecisionBoard({ simulacion, params, isLoading: propLoadi
       {isMock && <div className="mock-tag">Datos de ejemplo (seleccioná tu región y tocá Simular Rotaciones)</div>}
       {estaCargando && <p className="sub">Calculando estrategias y aplicando reglas regionales con datos NASA…</p>}
       <AvisoAgronomo />
+      <PanelHistorialDecision
+        diag={sim?.diagnostico_historial}
+        profile={profile}
+        seleccionada={seleccionada}
+        onSaveDecision={onSaveDecision}
+      />
 
       <section aria-labelledby="c-titulo">
         <div className="barra-titulo">

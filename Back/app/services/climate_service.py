@@ -1,4 +1,4 @@
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 import pandas as pd
 from app.repositories.climate_repository import ClimateRepository
 from app.repositories.region_repository import RegionRepository
@@ -11,6 +11,7 @@ from app.schemas.simulation import (
     SecuenciaItem,
     MetricasEstrategia,
     EvidenciaNasaItem,
+    DiagnosticoHistorial,
 )
 
 # Ventanas de calendario (mes inicio, mes fin) según ciclo de cultivo en San Luis
@@ -87,6 +88,11 @@ class ClimateService:
         # 5. Construir tarjetas de Evidencia NASA a partir de los datasets mensual, diario y región
         evidencia_nasa = self._build_nasa_evidence(climate_stats, current_crop_info["name"])
 
+        # 6. Construir diagnóstico basado en el historial de campañas anteriores del productor
+        diagnostico_historial = self._build_history_diagnosis(
+            request, current_key, estrategia_regenerativa
+        )
+
         default_lat, default_lon = REGION_COORDS.get(request.region, (-33.67, -65.45))
         lat = request.coords.lat if request.coords else default_lat
         lon = request.coords.lng if request.coords else default_lon
@@ -113,6 +119,7 @@ class ClimateService:
             ],
             evidencia_nasa=evidencia_nasa,
             reglas_regionales=region_info.reglas_activas if (region_info and region_info.reglas_activas) else [],
+            diagnostico_historial=diagnostico_historial,
         )
 
     # =========================================================================
@@ -435,7 +442,45 @@ class ClimateService:
             climate_stats=climate_stats,
         )
 
-        # 6. Ajuste por prioridades seleccionadas y cálculo de Salud Global del Suelo
+        # 6. Ajuste por historial de campañas anteriores (si el productor cargó su perfil)
+        history = request.campaignHistory or []
+        if history:
+            repeated_same = sum(
+                1 for h in history if CROP_KEY_ALIAS.get(h.cultivo.strip().lower(), "") == CROP_KEY_ALIAS.get(request.currentCrop.strip().lower(), "soja")
+            )
+            bare_winters = sum(1 for h in history if not h.cobertura_invernal)
+            had_drought = any(h.problema_principal == "sequia" for h in history)
+            had_erosion = any(h.problema_principal == "erosion" for h in history)
+            had_low_fert = any(h.problema_principal == "baja_fertilidad" for h in history)
+            had_pests = any(h.problema_principal == "malezas_plagas" for h in history)
+
+            if is_monoculture:
+                if repeated_same >= 1:
+                    agua = max(12, agua - min(14, repeated_same * 6))
+                    nutrientes = max(12, nutrientes - min(16, repeated_same * 7))
+                    riesgos_reg.insert(
+                        0,
+                        f"Historial ({len(history)} campañas): Ya sembraste {request.currentCrop} en {repeated_same} campaña(s) previa(s); repetirlo profundiza el agotamiento del lote",
+                    )
+                if bare_winters >= 1:
+                    erosion = max(10, erosion - min(14, bare_winters * 6))
+                    riesgos_reg.insert(
+                        1 if repeated_same >= 1 else 0,
+                        f"Historial: Llevás {bare_winters} invierno(s) sin cultivo de cobertura; dejar otro barbecho desnudo agrava la pérdida de suelo",
+                    )
+                riesgos_reg = riesgos_reg[:3]
+            else:
+                if had_drought and avg_drought_tol >= 0.7:
+                    agua = min(97, agua + 8)
+                if had_erosion and has_cover_crop:
+                    erosion = min(97, erosion + 8)
+                if had_low_fert and has_n_fixer:
+                    nutrientes = min(97, nutrientes + 8)
+                if had_pests:
+                    margen = min(95, margen + 6)
+                reglas_aplicadas.append(f"Ajustado por Historial ({len(history)} campañas previas)")
+
+        # 7. Ajuste por prioridades seleccionadas y cálculo de Salud Global del Suelo
         p = request.priorities
         if not is_monoculture:
             if p.water:
@@ -549,6 +594,17 @@ class ClimateService:
             }
 
         main_crop_key, cover_crop_key = regen_map.get(current_key, ("maíz", "arveja"))
+
+        # Ajuste inteligente de la decisión futura según problemas en campañas anteriores
+        history = request.campaignHistory or []
+        if history:
+            had_drought = any(h.problema_principal == "sequia" or h.resultado == "malo" for h in history)
+            had_low_fert = any(h.problema_principal == "baja_fertilidad" for h in history)
+            if had_drought and main_crop_key == "maíz":
+                main_crop_key = "sorgo"
+            elif had_low_fert and cover_crop_key != "arveja":
+                cover_crop_key = "arveja"
+
         main_crop = crops_catalog[main_crop_key]
         cover_crop = crops_catalog[cover_crop_key]
         current_crop = crops_catalog.get(current_key, crops_catalog["soja"])
@@ -682,3 +738,58 @@ class ClimateService:
                 dato=f"{climate_stats['pct_summer_rain']}% de la lluvia en 5 meses ({climate_stats['annual_rain_mm']} mm/año)",
             ),
         ]
+
+    def _build_history_diagnosis(
+        self,
+        request: SimulationRequest,
+        current_key: str,
+        estrategia_regenerativa: EstrategiaItem,
+    ) -> Optional[DiagnosticoHistorial]:
+        """Genera un resumen diagnóstico de cómo las campañas anteriores guiaron las decisiones futuras."""
+        history = request.campaignHistory or []
+        if not history:
+            return None
+
+        cultivos_previos = [f"{h.campana}: {h.cultivo}" for h in history]
+        bare_winters = sum(1 for h in history if not h.cobertura_invernal)
+        repeated_same = sum(
+            1 for h in history if CROP_KEY_ALIAS.get(h.cultivo.strip().lower(), "") == current_key
+        )
+
+        impactos: List[str] = []
+        if repeated_same >= 1:
+            impactos.append(
+                f"Venís sembrando {request.currentCrop} en {repeated_same} campaña(s) previa(s): se penalizó continuar con el mismo cultivo y se priorizó rotar de familia radicular."
+            )
+        if bare_winters >= 1:
+            impactos.append(
+                f"Registraste {bare_winters} campaña(s) sin cobertura invernal: se incluyó cobertura viva de otoño-invierno para frenar la pérdida de suelo y humedad."
+            )
+        if any(h.problema_principal == "sequia" or h.resultado == "malo" for h in history):
+            impactos.append(
+                "Por antecedentes de sequía o bajo rinde en campañas anteriores, se priorizaron cultivos más rústicos y de menor demanda hídrica."
+            )
+        if any(h.problema_principal == "erosion" for h in history):
+            impactos.append(
+                "Por antecedentes de erosión o voladura en el lote, se reforzó el anclaje con raíces invernales y rastrojo en superficie."
+            )
+        if any(h.problema_principal == "baja_fertilidad" for h in history):
+            impactos.append(
+                "Por signos de suelo cansado o baja fertilidad en campañas previas, se incorporaron leguminosas fijadoras de nitrógeno."
+            )
+        if any(h.problema_principal == "malezas_plagas" for h in history):
+            impactos.append(
+                "Por presión de malezas o plagas en campañas previas, se diseñó una secuencia que corta el ciclo biológico."
+            )
+        if not impactos:
+            impactos.append(
+                "Tu historial muestra buen manejo previo: las opciones futuras buscan consolidar la cobertura anual y sostener la fertilidad."
+            )
+
+        prox_secuencia = " + ".join(s.cultivo for s in estrategia_regenerativa.secuencia)
+        return DiagnosticoHistorial(
+            campanas_analizadas=len(history),
+            resumen_historial=f"{len(history)} campaña(s) en tu historial ({', '.join(cultivos_previos)})",
+            impacto_decisiones=impactos,
+            cultivo_sugerido_proximo=prox_secuencia,
+        )

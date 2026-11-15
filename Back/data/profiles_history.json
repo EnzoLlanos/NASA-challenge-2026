@@ -1,0 +1,64 @@
+{
+  "usr-1": {
+    "id": "usr-1",
+    "nombre": "Productor San Luis",
+    "establecimiento": "Establecimiento Don Pedro",
+    "region_principal": "centro",
+    "tierras": [
+      {
+        "nombre": "Establecimiento Don Pedro",
+        "region": "centro",
+        "porcentaje_en_san_luis": 100.0,
+        "hectareas": 250.0,
+        "lat": -33.67,
+        "lon": -65.45
+      },
+      {
+        "nombre": "Lote El Algarrobo (Limítrofe Norte)",
+        "region": "norte",
+        "porcentaje_en_san_luis": 65.0,
+        "hectareas": 180.0,
+        "lat": -32.15,
+        "lon": -65.8
+      },
+      {
+        "nombre": "Campo Médano Sur",
+        "region": "sur",
+        "porcentaje_en_san_luis": 100.0,
+        "hectareas": 400.0,
+        "lat": -34.85,
+        "lon": -65.5
+      }
+    ],
+    "historial_campanas": [
+      {
+        "id": "camp-1",
+        "campana": "2023/24",
+        "cultivo": "Soja",
+        "cobertura_invernal": false,
+        "resultado": "regular",
+        "problema_principal": "sequia",
+        "notas": "Verano seco y barbecho largo sin cobertura."
+      },
+      {
+        "id": "camp-2",
+        "campana": "2024/25",
+        "cultivo": "Soja",
+        "cobertura_invernal": false,
+        "resultado": "malo",
+        "problema_principal": "erosion",
+        "notas": "Se repitió soja sobre rastrojo escaso; hubo escurrimiento y pérdida de suelo."
+      },
+      {
+        "id": "camp-1794775916830",
+        "campana": "2025/26",
+        "cultivo": "Sorgo",
+        "cobertura_invernal": false,
+        "resultado": "malo",
+        "problema_principal": "malezas_plagas",
+        "notas": null
+      }
+    ],
+    "decisiones_futuras": []
+  }
+}

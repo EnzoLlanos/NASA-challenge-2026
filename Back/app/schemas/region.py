@@ -102,13 +102,57 @@ class Tierra(BaseModel):
         return self
 
 
+class CampanaAnterior(BaseModel):
+    """Registro histórico de una campaña agrícola previa del productor."""
+    id: Optional[str] = Field(default=None, description="ID único del registro de campaña")
+    campana: str = Field(..., example="2024/25", description="Ciclo o año de la campaña (ej. 2023/24, 2024/25)")
+    cultivo: str = Field(..., example="Soja", description="Cultivo principal sembrado en esa campaña")
+    cobertura_invernal: bool = Field(
+        default=False,
+        description="True si realizó cultivo de cobertura o verdeo invernal; False si dejó barbecho desnudo"
+    )
+    resultado: str = Field(
+        default="regular",
+        example="regular",
+        description="Resultado general de la campaña: 'bueno', 'regular' o 'malo'"
+    )
+    problema_principal: str = Field(
+        default="ninguno",
+        example="sequia",
+        description="Problema observado: 'ninguno', 'sequia', 'erosion', 'baja_fertilidad', 'malezas_plagas'"
+    )
+    notas: Optional[str] = Field(default=None, description="Observaciones adicionales del productor")
+
+
+class DecisionFuturaGuardada(BaseModel):
+    """Decisión de rotación elegida por el productor para una campaña futura."""
+    id: Optional[str] = None
+    fecha: str
+    campana_objetivo: str = "Próxima campaña"
+    region: str
+    estrategia_id: str
+    estrategia_nombre: str
+    secuencia_resumen: str
+    basado_en_campanas: int = 0
+
+
 class Usuario(BaseModel):
-    """Clase Usuario con su array de tierras ubicadas en San Luis."""
+    """Clase Usuario con su perfil, array de tierras ubicadas en San Luis e historial de campañas."""
     id: Optional[str] = Field(default=None, description="Identificador único del usuario")
     nombre: str = Field(..., min_length=1, description="Nombre del productor o usuario")
+    establecimiento: Optional[str] = Field(default="Establecimiento Don Pedro", description="Nombre del campo o lote principal")
+    region_principal: Optional[RegionSanLuis] = Field(default=RegionSanLuis.CENTRO, description="Región habitual del productor")
     tierras: List[Tierra] = Field(
         default_factory=list,
         description="Array de objetos Tierra (cada una con su región y nombre)"
+    )
+    historial_campanas: List[CampanaAnterior] = Field(
+        default_factory=list,
+        description="Historial de campañas anteriores del productor para guiar decisiones futuras"
+    )
+    decisiones_futuras: List[DecisionFuturaGuardada] = Field(
+        default_factory=list,
+        description="Historial de decisiones futuras guardadas por el productor"
     )
 
 

@@ -61,7 +61,7 @@ p {
 .sidebar-panel {
   width: 420px;
   min-width: 360px;
-  background-color: var(--blue-panel-bg);
+  background-color: #d1f9ca;
   border-right: 2px solid var(--blue-panel-border);
   padding: 24px 20px;
   display: flex;
@@ -764,4 +764,330 @@ p {
 
 .region-rule-item strong {
   color: var(--text-navy);
+}
+
+/* Botón de Perfil e Historial en el Sidebar */
+.profile-sidebar-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fffdf7;
+  border: 1.5px solid #96b89e;
+  border-radius: 12px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(31, 77, 43, 0.08);
+}
+
+.profile-sidebar-btn:hover {
+  border-color: var(--green-dark);
+  background: #f4f9f5;
+  transform: translateY(-1px);
+}
+
+.profile-sidebar-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.profile-sidebar-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: var(--green-tint);
+  border: 1px solid #b7d3bd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.profile-sidebar-texts {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.profile-sidebar-name {
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: var(--text-navy);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.profile-sidebar-sub {
+  font-size: 0.73rem;
+  color: var(--text-navy-muted);
+  line-height: 1.25;
+}
+
+.profile-sidebar-badge {
+  background: var(--green-dark);
+  color: #ffffff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 99px;
+  flex-shrink: 0;
+}
+
+/* Modal de Perfil e Historial de Campañas */
+.profile-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 28, 18, 0.65);
+  backdrop-filter: blur(3px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 9999;
+  animation: modalOverlayFade 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+}
+
+.profile-modal-card {
+  background: #fffdf7;
+  border: 2px solid #b7d3bd;
+  border-radius: 16px;
+  width: 100%;
+  max-width: 680px;
+  max-height: 88vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.32);
+  overflow: hidden;
+  animation: modalSlideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.profile-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 16px 20px;
+  border-bottom: 1.5px solid #dde5e0;
+  background: #f4f8f5;
+}
+
+.profile-modal-header h3 {
+  margin: 0;
+  font-size: 1.05rem;
+  color: #1f4d2b;
+}
+
+.profile-modal-header p {
+  margin: 4px 0 0;
+  font-size: 0.8rem;
+  color: #4b5e52;
+  line-height: 1.35;
+}
+
+.profile-modal-body {
+  padding: 16px 20px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.profile-section {
+  background: #f8faf8;
+  border: 1px solid #dde5e0;
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-section h4 {
+  margin: 0;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: #2f6b3a;
+}
+
+.profile-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.profile-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 10px;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-field label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  color: #1f2a1f;
+}
+
+.profile-field input,
+.profile-field select,
+.profile-note-input {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1.5px solid #c9d8ce;
+  background: #ffffff;
+  font: inherit;
+  font-size: 0.84rem;
+  color: #1f2a1f;
+}
+
+.profile-add-bottom {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.profile-note-input {
+  flex: 1;
+  min-width: 200px;
+}
+
+.btn-add-campaign {
+  background: #2f6b3a;
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 14px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.btn-add-campaign:hover {
+  background: #24562d;
+}
+
+.profile-history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.profile-history-item {
+  background: #fffdf7;
+  border: 1px solid #d5e2d9;
+  border-left: 4px solid #2f6b3a;
+  border-radius: 10px;
+  padding: 9px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.profile-history-main {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-history-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 0.85rem;
+}
+
+.profile-year-badge {
+  background: #1f4d2b;
+  color: #ffffff;
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+}
+
+.profile-tag {
+  background: #eef4f0;
+  color: #365341;
+  font-size: 0.74rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.profile-history-sub {
+  font-size: 0.78rem;
+  color: #526358;
+}
+
+.btn-delete-campaign {
+  background: transparent;
+  border: 1px solid #e5d0ce;
+  border-radius: 8px;
+  padding: 5px 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.btn-delete-campaign:hover {
+  background: #fbe4e2;
+}
+
+.profile-empty {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #5d6b64;
+  font-style: italic;
+}
+
+.profile-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 12px 20px;
+  border-top: 1.5px solid #dde5e0;
+  background: #f4f8f5;
+}
+
+.btn-profile-cancel {
+  background: #ffffff;
+  border: 1px solid #c5d1c9;
+  color: #3a4a3f;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.btn-profile-save {
+  background: #2f6b3a;
+  border: 0;
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-weight: 700;
+  font-size: 0.84rem;
+  cursor: pointer;
+}
+
+.btn-profile-save:hover {
+  background: #23532c;
 }

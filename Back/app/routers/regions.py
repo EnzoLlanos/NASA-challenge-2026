@@ -7,6 +7,8 @@ from app.schemas.region import (
     DelimiterInfoResponse,
     Usuario,
     Tierra,
+    CampanaAnterior,
+    DecisionFuturaGuardada,
 )
 from app.services.region_service import RegionService
 
@@ -124,3 +126,53 @@ def add_land_to_user(user_id: str, tierra: Tierra):
     Añade un objeto `Tierra` (`nombre`, `region`) al array de tierras de un usuario existente.
     """
     return RegionService.add_tierra_to_user(user_id, tierra)
+
+
+@router.get(
+    "/api/users/{user_id}",
+    response_model=Usuario,
+    summary="Obtener perfil del productor e historial de campañas",
+)
+def get_user_profile(user_id: str):
+    """Devuelve el perfil del productor con su historial de campañas anteriores y decisiones futuras."""
+    return RegionService.get_user(user_id)
+
+
+@router.put(
+    "/api/users/{user_id}/perfil",
+    response_model=Usuario,
+    summary="Actualizar perfil del productor e historial de campañas",
+)
+def update_user_profile(user_id: str, usuario: Usuario):
+    """Guarda los datos del perfil e historial de campañas anteriores del productor."""
+    return RegionService.update_user_profile(user_id, usuario)
+
+
+@router.post(
+    "/api/users/{user_id}/campanas",
+    response_model=Usuario,
+    summary="Agregar una campaña anterior al historial del perfil",
+)
+def add_campaign_history(user_id: str, campana: CampanaAnterior):
+    """Agrega los datos de una campaña agrícola previa al historial del productor."""
+    return RegionService.add_campana_to_user(user_id, campana)
+
+
+@router.delete(
+    "/api/users/{user_id}/campanas/{campana_id}",
+    response_model=Usuario,
+    summary="Eliminar una campaña del historial del perfil",
+)
+def delete_campaign_history(user_id: str, campana_id: str):
+    """Elimina un registro de campaña anterior del historial del productor."""
+    return RegionService.remove_campana_from_user(user_id, campana_id)
+
+
+@router.post(
+    "/api/users/{user_id}/decisiones",
+    response_model=Usuario,
+    summary="Guardar una decisión futura elegida en el historial del perfil",
+)
+def add_future_decision(user_id: str, decision: DecisionFuturaGuardada):
+    """Guarda en el perfil la rotación elegida para la próxima campaña."""
+    return RegionService.add_decision_to_user(user_id, decision)

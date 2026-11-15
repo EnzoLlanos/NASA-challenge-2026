@@ -1,6 +1,6 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
-from app.schemas.region import RegionSanLuis, ReglaRegionalItem
+from app.schemas.region import RegionSanLuis, ReglaRegionalItem, CampanaAnterior
 
 
 # =============================================================================
@@ -89,6 +89,14 @@ class SimulationRequest(BaseModel):
         default=None,
         description="Detalle opcional de condiciones zonales específicas"
     )
+    producerName: Optional[str] = Field(
+        default=None,
+        description="Nombre del productor en el perfil"
+    )
+    campaignHistory: Optional[List[CampanaAnterior]] = Field(
+        default_factory=list,
+        description="Historial de campañas anteriores cargadas en el perfil del productor"
+    )
 
 
 # =============================================================================
@@ -145,6 +153,14 @@ class EvidenciaNasaItem(BaseModel):
     dato: str
 
 
+class DiagnosticoHistorial(BaseModel):
+    """Diagnóstico generado a partir del historial de campañas previas del productor."""
+    campanas_analizadas: int = Field(default=0)
+    resumen_historial: str
+    impacto_decisiones: List[str] = Field(default_factory=list)
+    cultivo_sugerido_proximo: Optional[str] = Field(default=None)
+
+
 class SimulationResponse(BaseModel):
     """Respuesta completa del endpoint POST /api/simulation."""
     lote: LoteInfo
@@ -153,4 +169,8 @@ class SimulationResponse(BaseModel):
     reglas_regionales: Optional[List[ReglaRegionalItem]] = Field(
         default_factory=list,
         description="Reglas agronómicas evaluadas para la región seleccionada"
+    )
+    diagnostico_historial: Optional[DiagnosticoHistorial] = Field(
+        default=None,
+        description="Análisis de campañas anteriores y cómo influyeron en las decisiones futuras"
     )
