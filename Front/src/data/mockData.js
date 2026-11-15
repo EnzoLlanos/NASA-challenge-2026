@@ -31,6 +31,12 @@ export const ZONE_OPTIONS = [
   }
 ];
 
+export const REGION_OPTIONS = [
+  { value: "norte", label: "🌵 Norte (Quines, Candelaria, Ayacucho)" },
+  { value: "centro", label: "🌱 Centro (Villa Mercedes, San Luis, Fraga)" },
+  { value: "sur", label: "🌾 Sur (Buena Esperanza, Unión, Dupuy)" }
+];
+
 export const CROP_OPTIONS = [
   { value: "Soja", label: "🌱 Soja" },
   { value: "Maíz", label: "🌽 Maíz" },
@@ -94,4 +100,3 @@ export const MOCK_SIMULATION_RESULT = {
     }
   ]
 };
-

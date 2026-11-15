@@ -3,10 +3,18 @@ import Sidebar from "./components/config/Sidebar";
 import { SAMPLE_LOT_SAN_LUIS } from "./data/mockData";
 import "./styles/config.css";
 import DecisionBoard from "./decision/DecisionBoard.jsx";
+import { simulateRotations } from "./services/simulationService.js";
+
+const REGION_LABELS = {
+  norte: "Región Norte",
+  centro: "Región Centro",
+  sur: "Región Sur",
+};
 
 export default function App() {
-  // Estado de configuración del lote (Dev 1)
+  // Estado de configuración del lote (con región por defecto vacía "---")
   const [config, setConfig] = useState({
+    region: "",
     zona: "centro",
     coords: SAMPLE_LOT_SAN_LUIS.coords,
     currentCrop: "Soja",
@@ -15,53 +23,70 @@ export default function App() {
       water: true,
       nutrients: true,
       erosion: true,
-      forageProfit: false
+      forageProfit: false,
     },
-    lotName: SAMPLE_LOT_SAN_LUIS.name
+    lotName: SAMPLE_LOT_SAN_LUIS.name,
   });
 
   const [isLoading, setIsLoading] = useState(false);
-  // Configuración con la que se simuló por última vez (la consume el Tablero de Decisión)
-  const [simParams, setSimParams] = useState(null);
+  const [simulationData, setSimulationData] = useState(null);
+  const [errorMessage, setErrorMessage] = useState(null);
+
+  // Ejecuta la llamada al servicio de simulación de la API
+  const runSimulation = async (paramsToSimulate) => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    try {
+      const data = await simulateRotations(paramsToSimulate);
+      setSimulationData(data);
+    } catch (err) {
+      console.error("Error al conectar con la API de simulación:", err);
+      setErrorMessage(`No se pudo conectar a la API (FastAPI en http://127.0.0.1:8000): ${err.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Acción del botón principal "Simular Rotaciones"
   const handleSimulate = () => {
-    setIsLoading(true);
-    // Pequeño retardo para simular la consulta satelital
-    setTimeout(() => {
-      setSimParams({ ...config });
-      setIsLoading(false);
-    }, 700);
+    if (!config.region) return;
+    runSimulation(config);
   };
 
   return (
     <div className="app-container">
-      {/* BLOQUE 1: Panel Lateral de Configuración (Tu parte - Dev 1) */}
+      {/* Bloque 1: Configuración del Lote */}
       <Sidebar
         config={config}
-        onConfigChange={setConfig}
-        onSimulate={handleSimulate}
+        onChange={setConfig}
+        onSubmit={handleSimulate}
         isLoading={isLoading}
       />
 
-      {/* BLOQUES 2 y 3: Área Principal / Tablero de Decisión (Para tu amigo - Dev 2) */}
+      {/* Bloque 2 y 3: Tablero de Decisión y Evidencia NASA */}
       <main className="main-dashboard">
-        <header className="dashboard-header">
-          <div className="dashboard-title">
-            <h2>Tablero de Decisión Agronómica</h2>
-            <p>
-              Campo evaluado: <strong>{config.lotName || "Lote seleccionado"}</strong> (
-              {config.coords.lat}, {config.coords.lng}) &bull; Cultivo actual:{" "}
-              <strong>{config.currentCrop}</strong>
-            </p>
+        {errorMessage && (
+          <div
+            style={{
+              background: "#fee2e2",
+              color: "#991b1b",
+              border: "1px solid #f87171",
+              padding: "12px 16px",
+              borderRadius: "8px",
+              fontSize: "0.9rem",
+              fontWeight: 600,
+            }}
+          >
+            ⚠️ {errorMessage}
           </div>
-          <div className="nasa-tag">
-            <span>🛰️</span> Modelos NASA SMAP &bull; ECOSTRESS &bull; GPM
-          </div>
-        </header>
+        )}
 
-        {/* Bloques 2 y 3: tablero de decisión + evidencia NASA + timeline (Dev 2) */}
-        <DecisionBoard params={simParams} />
+        {/* Tablero de decisión integrado */}
+        <DecisionBoard
+          simulacion={simulationData}
+          params={config}
+          isLoading={isLoading}
+        />
       </main>
     </div>
   );

@@ -1,19 +1,6 @@
-import MapSelector from "./MapSelector";
 import ConfigForm from "./ConfigForm";
-import { SAMPLE_LOT_SAN_LUIS } from "../../data/mockData";
 
 export default function Sidebar({ config, onConfigChange, onSimulate, isLoading }) {
-  const handleLoadDemo = () => {
-    onConfigChange({
-      ...config,
-      coords: SAMPLE_LOT_SAN_LUIS.coords,
-      currentCrop: SAMPLE_LOT_SAN_LUIS.currentCrop,
-      irrigation: SAMPLE_LOT_SAN_LUIS.irrigation,
-      priorities: { ...SAMPLE_LOT_SAN_LUIS.priorities },
-      lotName: SAMPLE_LOT_SAN_LUIS.name
-    });
-  };
-
   return (
     <aside className="sidebar-panel">
       <header className="sidebar-header">
@@ -23,12 +10,6 @@ export default function Sidebar({ config, onConfigChange, onSimulate, isLoading 
           <p>Tablero de decisión de rotaciones</p>
         </div>
       </header>
-
-      <MapSelector
-        selectedLocation={config.coords}
-        onLocationChange={(coords) => onConfigChange({ ...config, coords })}
-        onLoadDemo={handleLoadDemo}
-      />
 
       <ConfigForm config={config} onChange={onConfigChange} onSubmit={onSimulate} isLoading={isLoading} />
 

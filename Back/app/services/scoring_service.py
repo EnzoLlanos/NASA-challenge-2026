@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Any
 from app.schemas import (
     ZonaSanLuis,
     Tierra,
@@ -20,13 +20,19 @@ class ScoringService:
         cls,
         current_rotation: Optional[List[str]] = None,
         priorities: Optional[Any] = None,
-        region: Optional[ZonaSanLuis] = None,
-        zona: Optional[ZonaSanLuis] = None,
+        region: Optional[Any] = None,
+        zona: Optional[Any] = None,
         tierra: Optional[Tierra] = None,
         current_crop: Optional[str] = None,
     ) -> RotationResponse:
         # Resolver zona activa (soporta tanto 'zona' como 'region')
         zona_efectiva = zona or region or (tierra.zona if tierra else ZonaSanLuis.CENTRO)
+        if hasattr(zona_efectiva, "value"):
+            z_val = str(zona_efectiva.value).lower()
+            try:
+                zona_efectiva = ZonaSanLuis(z_val)
+            except ValueError:
+                zona_efectiva = ZonaSanLuis.CENTRO
 
         req = RotationRequest(
             zona=zona_efectiva,

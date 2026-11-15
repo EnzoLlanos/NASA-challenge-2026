@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 from app.schemas import RotationRequest, RotationResponse
 from app.scoring.engine import ScoringEngine
+from app.services.scoring_service import ScoringService
 
 router = APIRouter(tags=["Estrategias de Rotación"])
 
@@ -51,17 +52,12 @@ def get_zones():
 @router.post(
     "/api/estrategias",
     response_model=RotationResponse,
-    summary="Evaluar rotaciones agronómicas adaptadas (sin porcentajes)",
-)
-@router.post(
-    "/api/simulation",
-    response_model=RotationResponse,
-    summary="Endpoint de simulación para el Tablero de Decisión del Frontend",
+    summary="Evaluar rotaciones agronómicas adaptadas por zona de San Luis",
 )
 def evaluate_rotations(payload: RotationRequest):
     """
     Recibe la zona de San Luis (`norte`, `centro` o `sur`), la tierra y el cultivo actual.
     Devuelve estrategias de rotación evaluadas en lenguaje simple para agricultores,
-    sin porcentajes ni márgenes de ganancia confusos, con evidencias de satélites NASA.
+    con evidencias satelitales NASA y recomendaciones agroecológicas.
     """
     return ScoringEngine.calculate_rotation(payload)

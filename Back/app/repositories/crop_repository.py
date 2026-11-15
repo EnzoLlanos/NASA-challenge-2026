@@ -1,6 +1,6 @@
 from typing import List, Optional, Dict
 import unicodedata
-from app.schemas import CropInfo, ZonaSanLuis
+from app.schemas import CropInfo, ZonaSanLuis, CropResponse
 from app.scoring.engine import ScoringEngine
 
 
@@ -44,7 +44,7 @@ class CropRepository:
     def get_all(
         cls,
         season: Optional[str] = None,
-        zona: Optional[ZonaSanLuis] = ZonaSanLuis.CENTRO
+        zona: Optional[ZonaSanLuis] = ZonaSanLuis.CENTRO,
     ) -> List[CropInfo]:
         """Devuelve los cultivos leídos de data/crops.yaml para la zona seleccionada."""
         crops_dict = ScoringEngine.load_crops_for_zone(zona or ZonaSanLuis.CENTRO)
@@ -58,7 +58,7 @@ class CropRepository:
     def find_by_name_or_id(
         cls,
         identifier: str,
-        zona: Optional[ZonaSanLuis] = ZonaSanLuis.CENTRO
+        zona: Optional[ZonaSanLuis] = ZonaSanLuis.CENTRO,
     ) -> Optional[CropInfo]:
         """Busca un cultivo en crops.yaml por nombre o alias."""
         norm = _normalize_key(identifier)
@@ -70,7 +70,7 @@ class CropRepository:
     def get_by_id(
         cls,
         crop_id: str,
-        zona: Optional[ZonaSanLuis] = ZonaSanLuis.CENTRO
+        zona: Optional[ZonaSanLuis] = ZonaSanLuis.CENTRO,
     ) -> Optional[CropInfo]:
         """Obtiene un cultivo por su ID estricto."""
         crops_dict = ScoringEngine.load_crops_for_zone(zona or ZonaSanLuis.CENTRO)
