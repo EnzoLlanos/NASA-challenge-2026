@@ -35,9 +35,11 @@ export async function apiRequest(endpoint, options = {}) {
     config.body = JSON.stringify(config.body);
   }
 
-  // Intenta primero por el proxy local de Vite (/api/...) para evitar bloqueos de red privada del navegador,
-  // y si no está bajo proxy, usa la URL directa del backend (http://127.0.0.1:8000/api/...).
-  const urlsToTry = [proxyUrl, directUrl];
+  // Si VITE_API_URL fue configurado explícitamente (ej: en Render), usamos directamente la URL del backend.
+  // En desarrollo local (cuando VITE_API_URL no está definido), intentamos primero el proxy de Vite (/api/...)
+  // y luego fallback a http://127.0.0.1:8000.
+  const isCustomBaseUrl = Boolean(import.meta.env.VITE_API_URL);
+  const urlsToTry = isCustomBaseUrl ? [directUrl] : [proxyUrl, directUrl];
   let lastError = null;
 
   for (const url of urlsToTry) {
