@@ -251,6 +251,7 @@ function TarjetaEstrategia({ e, activa, onElegir, onOpenRules }) {
         </div>
       )}
 
+      <p className="tarjeta-elige-msg">Elige una de estas opciones</p>
       <button className="boton" onClick={() => onElegir(e.id)} aria-pressed={activa}>
         {activa ? 'Estrategia seleccionada ✓' : 'Ver en el calendario'}
       </button>
@@ -350,13 +351,25 @@ function EvidenciaNasa({ items }) {
 }
 
 function AvisoAgronomo() {
+  const [cerrado, setCerrado] = useState(false);
+  if (cerrado) return null;
+
   return (
     <aside className="aviso" role="note">
       <span aria-hidden="true">⚠️</span>
-      <div>
+      <div className="aviso-contenido">
         <strong>Herramienta de apoyo, no reemplaza a tu agrónomo.</strong>
         <p>Los resultados son estimaciones. Validá cualquier cambio de rotación con tu ingeniero agrónomo de confianza antes de decidir.</p>
       </div>
+      <button
+        type="button"
+        className="aviso-cerrar"
+        onClick={() => setCerrado(true)}
+        aria-label="Cerrar aviso"
+        title="Cerrar aviso"
+      >
+        ✕
+      </button>
     </aside>
   );
 }
@@ -364,6 +377,7 @@ function AvisoAgronomo() {
 function PanelHistorialDecision({ diag, profile, seleccionada, onSaveDecision }) {
   const [abierto, setAbierto] = useState(false);
   const [savedId, setSavedId] = useState(null);
+  const [confirmSave, setConfirmSave] = useState(false);
   const campanas = profile?.historial_campanas || [];
 
   const resumen =
@@ -385,8 +399,14 @@ function PanelHistorialDecision({ diag, profile, seleccionada, onSaveDecision })
 
   const handleGuardar = () => {
     if (!seleccionada || !onSaveDecision) return;
+    setConfirmSave(true);
+  };
+
+  const handleConfirmGuardar = () => {
+    if (!seleccionada || !onSaveDecision) return;
     onSaveDecision(seleccionada);
     setSavedId(seleccionada.id);
+    setConfirmSave(false);
   };
 
   return (
@@ -438,6 +458,33 @@ function PanelHistorialDecision({ diag, profile, seleccionada, onSaveDecision })
           </div>
         </div>
       </div>
+
+      {confirmSave && seleccionada && (
+        <div className="confirm-popup-overlay" onClick={() => setConfirmSave(false)}>
+          <div className="confirm-popup-card" onClick={(e) => e.stopPropagation()}>
+            <h4>⚠️ Confirmar decisión futura</h4>
+            <p>
+              ¿Querés guardar la estrategia <strong>"{seleccionada.nombre}"</strong> en el historial de tu perfil para la próxima campaña?
+            </p>
+            <div className="confirm-popup-actions">
+              <button
+                type="button"
+                className="btn-profile-cancel"
+                onClick={() => setConfirmSave(false)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="btn-profile-save"
+                onClick={handleConfirmGuardar}
+              >
+                Sí, guardar decisión
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   );
 }

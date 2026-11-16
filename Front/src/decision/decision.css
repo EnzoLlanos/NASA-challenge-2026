@@ -32,6 +32,12 @@
   color: var(--ink);
 }
 
+.aviso { display: flex; gap: 12px; align-items: flex-start; background: var(--ambar-bg); border: 1px solid var(--ambar); border-left-width: 6px; border-radius: 10px; padding: 12px 16px; font-size: 14px; position: relative; }
+.aviso > span { font-size: 22px; }
+.aviso-contenido { flex: 1; }
+.aviso-cerrar { background: transparent; border: 1px solid rgba(138, 101, 0, 0.35); color: #7c5800; width: 26px; height: 26px; border-radius: 50%; cursor: pointer; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.15s ease, color 0.15s ease; }
+.aviso-cerrar:hover { background: var(--rojo-bg); color: var(--rojo); border-color: var(--rojo); }
+
 .decision h4 {
   margin: 14px 0 6px;
   font-size: 12px;
@@ -883,4 +889,123 @@ details[open]::details-content {
 .rules-modal-factor {
   color: var(--muted);
   font-size: 11.5px;
+}
+
+/* Panel desplegable de Diagnóstico por Historial de Campañas */
+.historial-decision-panel {
+  background: #f2f8f3;
+  border: 1.5px solid #b5d4be;
+  border-left: 6px solid var(--azul);
+  padding: 14px 18px;
+}
+
+.historial-toggle {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  user-select: none;
+}
+
+.historial-toggle-left {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.historial-toggle-icono {
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #dfeee3;
+  color: #1f4d2b;
+  padding: 5px 12px;
+  border-radius: 20px;
+  transition: background 0.3s ease, transform 0.3s ease;
+}
+
+.historial-toggle:hover .historial-toggle-icono {
+  background: #cfe5d5;
+  transform: translateY(-1px);
+}
+
+.historial-decision-panel.abierto .acordeon-desplegable {
+  grid-template-rows: 1fr;
+  opacity: 1;
+}
+
+.historial-decision-body {
+  padding-top: 12px;
+  margin-top: 12px;
+  border-top: 1px dashed #b5d4be;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.historial-decision-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.historial-impacto-lista {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13.5px;
+  color: var(--ink);
+}
+
+.btn-save-decision {
+  background: var(--azul);
+  color: #ffffff;
+  border: 0;
+  border-radius: 8px;
+  padding: 8px 13px;
+  font-size: 12.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.btn-save-decision:hover {
+  background: #23532c;
+  transform: translateY(-1px);
+}
+
+.btn-save-decision.saved {
+  background: var(--verde);
+}
+
+.estrategias-elige-banner {
+  margin: 0 0 10px !important;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--azul);
+}
+
+.tarjeta-elige-msg {
+  margin: 12px 0 0 !important;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  text-align: center;
+}
+
+.tarjeta .tarjeta-elige-msg + .boton {
+  margin-top: 6px;
 }

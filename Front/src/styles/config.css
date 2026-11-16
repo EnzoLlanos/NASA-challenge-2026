@@ -1091,3 +1091,83 @@ p {
 .btn-profile-save:hover {
   background: #23532c;
 }
+
+.btn-profile-save.danger {
+  background: #c0392b;
+}
+
+.btn-profile-save.danger:hover {
+  background: #962d22;
+}
+
+/* Banner de feedback de guardado dentro del modal de perfil */
+.profile-feedback-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  background: #e3f5ea;
+  border: 1.5px solid #3e9b4f;
+  color: #1f4d2b;
+  padding: 10px 14px;
+  border-radius: 10px;
+  font-size: 0.83rem;
+  font-weight: 700;
+}
+
+.profile-feedback-close {
+  background: transparent;
+  border: 0;
+  color: #1f4d2b;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Ventanita emergente de advertencia / confirmación */
+.confirm-popup-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 28, 18, 0.55);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 10050;
+  animation: modalOverlayFade 0.25s ease forwards;
+}
+
+.confirm-popup-card {
+  background: #fffdf7;
+  border: 2px solid #2f6b3a;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 400px;
+  padding: 18px 20px;
+  box-shadow: 0 18px 42px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  animation: modalSlideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.confirm-popup-card h4 {
+  margin: 0;
+  font-size: 0.98rem;
+  color: #1f4d2b;
+}
+
+.confirm-popup-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #2c3a30;
+  line-height: 1.4;
+}
+
+.confirm-popup-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 6px;
+}

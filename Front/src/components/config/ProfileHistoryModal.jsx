@@ -38,37 +38,70 @@ export default function ProfileHistoryModal({
   const [nuevaNota, setNuevaNota] = useState("");
   const [openDecisiones, setOpenDecisiones] = useState(false);
 
+  // Estado para la ventanita de advertencia / confirmación y aviso de éxito
+  const [confirmModal, setConfirmModal] = useState(null);
+  const [feedbackBanner, setFeedbackBanner] = useState(null);
+
   if (!isOpen) return null;
 
   const handleAddCampana = (e) => {
     e.preventDefault();
-    const item = {
-      id: `camp-${Date.now()}`,
-      campana: nuevaCampana,
-      cultivo: nuevoCultivo,
-      cobertura_invernal: Boolean(nuevaCobertura),
-      resultado: nuevoResultado,
-      problema_principal: nuevoProblema,
-      notas: nuevaNota.trim() || undefined,
-    };
-    const updated = [...campanas, item];
-    setCampanas(updated);
-    setNuevaNota("");
+    setConfirmModal({
+      titulo: "⚠️ Confirmar carga de campaña",
+      mensaje: `¿Querés guardar la campaña ${nuevaCampana} (${nuevoCultivo}) en tu historial del perfil?`,
+      textoConfirmar: "Sí, guardar campaña",
+      tipo: "confirmar",
+      onConfirm: () => {
+        const item = {
+          id: `camp-${Date.now()}`,
+          campana: nuevaCampana,
+          cultivo: nuevoCultivo,
+          cobertura_invernal: Boolean(nuevaCobertura),
+          resultado: nuevoResultado,
+          problema_principal: nuevoProblema,
+          notas: nuevaNota.trim() || undefined,
+        };
+        setCampanas((prev) => [...prev, item]);
+        setNuevaNota("");
+        setConfirmModal(null);
+        setFeedbackBanner(`✓ La campaña ${nuevaCampana} (${nuevoCultivo}) quedó guardada en tu historial.`);
+      },
+    });
   };
 
-  const handleDeleteCampana = (id) => {
-    setCampanas(campanas.filter((c) => c.id !== id));
+  const handleDeleteCampana = (campanaObj) => {
+    setConfirmModal({
+      titulo: "⚠️ Confirmar eliminación",
+      mensaje: `¿Estás seguro de quitar la campaña ${campanaObj.campana} (${campanaObj.cultivo}) de tu historial?`,
+      textoConfirmar: "Sí, eliminar",
+      tipo: "peligro",
+      onConfirm: () => {
+        setCampanas((prev) => prev.filter((c) => c.id !== campanaObj.id));
+        setConfirmModal(null);
+        setFeedbackBanner(`🗑️ Se eliminó la campaña ${campanaObj.campana} del historial.`);
+      },
+    });
   };
 
   const handleSave = () => {
-    const updatedProfile = {
-      ...profile,
-      nombre: nombre.trim() || "Productor San Luis",
-      establecimiento: establecimiento.trim() || "Establecimiento Don Pedro",
-      historial_campanas: campanas,
-    };
-    onSaveProfile(updatedProfile);
-    onClose();
+    setConfirmModal({
+      titulo: "⚠️ Confirmar guardado de perfil",
+      mensaje:
+        "¿Confirmás guardar los cambios de tu perfil e historial para aplicarlos a las próximas decisiones?",
+      textoConfirmar: "Confirmar y aplicar",
+      tipo: "confirmar",
+      onConfirm: () => {
+        const updatedProfile = {
+          ...profile,
+          nombre: nombre.trim() || "Productor San Luis",
+          establecimiento: establecimiento.trim() || "Establecimiento Don Pedro",
+          historial_campanas: campanas,
+        };
+        setConfirmModal(null);
+        onSaveProfile(updatedProfile);
+        onClose();
+      },
+    });
   };
 
   const decisiones = profile?.decisiones_futuras || [];
@@ -94,6 +127,20 @@ export default function ProfileHistoryModal({
         </div>
 
         <div className="profile-modal-body">
+          {feedbackBanner && (
+            <div className="profile-feedback-banner" role="status">
+              <span>{feedbackBanner}</span>
+              <button
+                type="button"
+                className="profile-feedback-close"
+                onClick={() => setFeedbackBanner(null)}
+                aria-label="Cerrar aviso"
+              >
+                ✕
+              </button>
+            </div>
+          )}
+
           {/* 1. Datos básicos del perfil */}
           <div className="profile-section">
             <h4>1. Datos de tu perfil y campo</h4>
@@ -244,7 +291,7 @@ export default function ProfileHistoryModal({
                       <button
                         type="button"
                         className="btn-delete-campaign"
-                        onClick={() => handleDeleteCampana(c.id)}
+                        onClick={() => handleDeleteCampana(c)}
                         title="Quitar campaña del historial"
                       >
                         🗑️
@@ -306,6 +353,34 @@ export default function ProfileHistoryModal({
             ✓ Guardar perfil y usar historial en decisiones futuras
           </button>
         </div>
+
+        {/* Ventanita emergente de advertencia / confirmación */}
+        {confirmModal && (
+          <div className="confirm-popup-overlay" onClick={() => setConfirmModal(null)}>
+            <div className="confirm-popup-card" onClick={(e) => e.stopPropagation()}>
+              <h4>{confirmModal.titulo}</h4>
+              <p>{confirmModal.mensaje}</p>
+              <div className="confirm-popup-actions">
+                <button
+                  type="button"
+                  className="btn-profile-cancel"
+                  onClick={() => setConfirmModal(null)}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="button"
+                  className={`btn-profile-save ${
+                    confirmModal.tipo === "peligro" ? "danger" : ""
+                  }`}
+                  onClick={confirmModal.onConfirm}
+                >
+                  {confirmModal.textoConfirmar}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
