@@ -1,131 +1,159 @@
-🌾 AgroNASA — Rotaciones Resilientes
+# 🌾 AgroNASA — Resilient Crop Rotations
+> **NASA Space Apps Challenge** | *Adapting Farms with NASA Data*
 
-NASA Space Apps Challenge | Adapting Farms with NASA Data
+AgroNASA is an interactive agricultural decision-support web application. Its purpose is to assist farmers and agronomists (initially focused on the province of **San Luis, Argentina**) in designing, comparing, and selecting **crop rotation strategies** tailored to the actual climate variability and risks of their region.
 
-AgroNASA es una plataforma web interactiva de apoyo a la toma de decisiones agrícolas. Su objetivo es ayudar a productores y técnicos agropecuarios (inicialmente enfocado en la provincia de San Luis, Argentina) a diseñar, comparar y seleccionar estrategias de rotación de cultivos adaptadas a la variabilidad y el riesgo climático real de su región.
+---
 
-📌 Tabla de Contenidos
-¿Qué hace el proyecto?
-¿Cómo funciona?
-Beneficios e Impacto
-Metas a Futuro
-Tecnologías y Herramientas
-Estructura del Proyecto
-Guía de Instalación y Uso
-🚀 ¿Qué hace el proyecto?
+## 📌 Table of Contents
+- [What Does It Do?](#-what-does-it-do)
+- [How Does It Work?](#-how-does-it-work)
+- [Benefits & Impact](#-benefits--impact)
+- [What We Hope to Achieve](#-what-we-hope-to-achieve)
+- [Tools, Languages & Technologies](#-tools-languages--technologies)
+- [Project Architecture](#-project-architecture)
+- [Installation & Setup](#-installation--setup)
 
-AgroNASA evalúa el riesgo agroclimático de cada lote (estrés hídrico, olas de calor, heladas tardías y ventanas seguras de siembra) utilizando 26 años de datos satelitales y meteorológicos de NASA POWER (2000–2025).
+---
 
-A partir de la selección geográfica y el historial de manejo del productor, el sistema genera recomendaciones agronómicas claras que incluyen:
+## 🚀 What Does It Do?
 
-Estrategias de rotación comparables (conservación/cobertura, diversificación de riesgo o planteo de rendimiento).
-Puntuación y diagnóstico de resiliencia con explicación detallada de las reglas aplicadas.
-Calendario anual interactivo con las fechas óptimas de siembra, desarrollo y cosecha.
-Evidencia satelital NASA que respalda de forma transparente cada recomendación.
+AgroNASA evaluates the agroclimatic risk of agricultural plots (water stress, heatwaves, late frosts, and optimal planting windows) using **26 years of historical satellite and meteorological records from NASA POWER (2000–2025)**.
 
-Preview unavailable Figura 1: Pantalla principal con selector de zonas de San Luis y configuración de lote.
+Based on regional geographic selection and the farmer's historical field management, the platform generates actionable agronomic recommendations, including:
+- **Comparable crop rotation strategies** (soil conservation/cover crops, risk diversification, or high-yield planning).
+- **Resilience scoring and diagnosis** with transparent rule explanations.
+- **Interactive annual timeline/calendar** displaying optimal sowing, development, and harvest stages.
+- **NASA satellite evidence panel** providing direct climatic justification behind each recommendation.
 
-⚙️ ¿Cómo funciona?
+<!-- SCREENSHOT 1 SUGGESTION -->
+![Welcome State and Interactive Map](docs/screenshots/01_bienvenida_mapa.png)
+*Figure 1: Main screen featuring the interactive zone selector for San Luis and farm configuration.*
 
-El sistema integra tres módulos principales:
+---
 
-1. Pipeline de Datos Climáticos (NASA POWER)
-Descarga series meteorológicas históricas diarias (precipitación, radiación, temperatura máxima/mínima, humedad relativa) a través de la API de NASA POWER para las distintas zonas agroecológicas definidas en data/zonas.yaml.
-Limpia datos atípicos (-999) y calcula indicadores mensuales y estacionales de sequía y estrés térmico (pipeline/build_features.py e indicadores_estacionales.py).
-2. Motor de Simulación y Scoring (Backend FastAPI)
-Modela los requerimientos fenológicos y de agua de cada cultivo (data/crops.yaml).
-Cruza los datos del lote y su historial de campañas con el historial climático de la zona.
-Evalúa penalizaciones y bonificaciones agronómicas para rankear las mejores combinaciones de rotación (Back/app/scoring/engine.py).
+## ⚙️ How Does It Work?
 
-Preview unavailable Figura 2: Formulario de configuración del establecimiento y panel de historial de campañas.
+The system is built upon three integrated modules:
 
-3. Tablero de Decisión Agronómica (Frontend React)
-Muestra un mapa interactivo con Leaflet para ubicar el lote.
-Despliega tarjetas comparativas de estrategias con puntajes visuales y reglas aplicadas.
-Provee una línea de tiempo anual (Timeline) y un bloque de Evidencia NASA con métricas climáticas clave.
+### 1. Climate Data Pipeline (NASA POWER)
+- Ingests daily historical meteorological time-series (precipitation, solar radiation, min/max temperatures, relative humidity) via the NASA POWER API for agroecological zones defined in `data/zonas.yaml`.
+- Cleans missing/fill values (`-999`) and calculates monthly and seasonal indicators for drought and thermal stress (`pipeline/build_features.py` and `indicadores_estacionales.py`).
 
-Preview unavailable Figura 3: Comparación lado a lado de estrategias de rotación y métricas de resiliencia.
+### 2. Simulation & Scoring Engine (FastAPI Backend)
+- Models crop-specific phenological and water balance requirements (`data/crops.yaml`).
+- Cross-references farm parcel data and previous crop history against regional climate patterns.
+- Computes agronomic bonuses and penalties to rank optimal crop rotations (`Back/app/scoring/engine.py`).
 
-Preview unavailable Figura 4: Calendario agrícola proyectado y bloque de evidencia climática de NASA POWER.
+<!-- SCREENSHOT 2 SUGGESTION -->
+![Parcel Configuration and Crop History](docs/screenshots/02_config_lote.png)
+*Figure 2: Plot configuration sidebar and previous campaign history panel.*
 
-💡 Beneficios e Impacto
-Decisiones con respaldo científico: Sustituye suposiciones o medias climáticas estáticas por 26 años de registros climáticos satelitales de alta resolución.
-Mitigación del riesgo de sequía y heladas: Alerta sobre ventanas de estrés antes de comprometer la siembra.
-Transparencia agronómica: El productor sabe exactamente por qué una rotación es recomendada (sin cajas negras).
-Sostenibilidad del suelo: Fomenta cultivos de cobertura y rotaciones que preservan nutrientes y humedad en el perfil.
-🎯 Metas a Futuro
-Corto Plazo: Validar las matrices de recomendación con técnicos agrícolas y productores locales de la región semiárida central de Argentina.
-Mediano Plazo: Incorporar pronósticos estacionales predictivos (ENSO, modelos climáticos estacionales) e integrar datos de humedad del suelo de misiones satelitales como SMAP.
-Largo Plazo: Extender la cobertura a nivel nacional e internacional, agregando exportación de reportes agronómicos certificados en PDF para seguros y créditos agrícolas.
-🛠️ Tecnologías y Herramientas
-Área	Tecnologías / Herramientas
-Frontend	React 19, Vite 8, Leaflet, JavaScript (ES Modules), CSS3 moderno
-Backend	Python 3.12, FastAPI, Uvicorn, Pydantic
-Ciencia de Datos	Pandas, Requests, PyYAML
-Datos Satelitales	NASA POWER API (Prediction of Worldwide Energy Resources)
-Control de Versiones	Git & GitHub
+### 3. Agronomic Decision Board (React Frontend)
+- Visualizes an **interactive Leaflet map** to pinpoint the parcel location.
+- Presents **side-by-side strategy comparison cards** with visual resilience metrics and underlying agronomic rules.
+- Features an **annual crop timeline** and an integrated **NASA Evidence** dashboard displaying the climatic indicators that justify the advice.
 
-Preview unavailable Figura 5: Endpoints del motor de recomendación en FastAPI Swagger UI.
+<!-- SCREENSHOT 3 SUGGESTION -->
+![Decision Board and Strategy Comparison](docs/screenshots/03_tarjetas_estrategias.png)
+*Figure 3: Side-by-side rotation strategy comparison showing resilience scores and trade-offs.*
 
-📁 Estructura del Repositorio
-text
-├── Back/                      # Backend en FastAPI
+<!-- SCREENSHOT 4 SUGGESTION -->
+![Annual Timeline and NASA Evidence](docs/screenshots/04_timeline_evidencia.png)
+*Figure 4: Projected annual crop calendar and NASA POWER satellite evidence summary.*
+
+---
+
+## 💡 Benefits & Impact
+
+- **Data-Driven & Science-Backed:** Replaces guesswork and static climate averages with 26 years of high-resolution satellite climate data.
+- **Risk Mitigation:** Alerts farmers to potential water deficits, heatwaves, or frost hazards before planting investments are made.
+- **Transparent Agronomy:** "No black boxes"—producers can inspect the exact NASA indicators and agronomic rules driving every suggestion.
+- **Soil & Resource Conservation:** Promotes cover crops and crop diversification to improve water use efficiency and soil health.
+
+---
+
+## 🎯 What We Hope to Achieve
+
+- **Short Term:** Validate recommendation models alongside local farmers and agricultural extension specialists in the semi-arid central region of Argentina.
+- **Medium Term:** Incorporate predictive seasonal forecasts (ENSO indicators, seasonal forecasting models) and integrate satellite soil moisture datasets such as **SMAP**.
+- **Long Term:** Expand regional coverage across Latin America and offer certified agronomic export reports (PDF) for agricultural credit and climate risk insurance.
+
+---
+
+## 🛠️ Tools, Languages & Technologies
+
+| Layer | Tools & Technologies |
+|---|---|
+| **Frontend** | React 19, Vite 8, Leaflet, Modern JavaScript (ES Modules), CSS3 |
+| **Backend** | Python 3.12, FastAPI, Uvicorn, Pydantic |
+| **Data Science & Processing** | Pandas, Requests, PyYAML |
+| **Satellite Data** | NASA POWER API (Prediction of Worldwide Energy Resources) |
+| **Version Control & Quality** | Git, GitHub, Oxlint |
+
+<!-- SCREENSHOT 5 SUGGESTION (OPTIONAL) -->
+![Backend API Documentation](docs/screenshots/05_api_swagger.png)
+*Figure 5: Interactive REST API endpoints in FastAPI Swagger UI.*
+
+---
+
+## 📁 Project Architecture
+
+```text
+├── Back/                      # FastAPI Backend
 │   ├── app/
-│   │   ├── scoring/           # Motor de cálculo y reglas agronómicas
-│   │   ├── routers/           # Endpoints de cultivos, zonas y simulación
-│   │   ├── repositories/      # Acceso a datos locales y climáticos
-│   │   └── main.py            # Entrada principal de la API
+│   │   ├── scoring/           # Agronomic scoring engine and rules
+│   │   ├── routers/           # Endpoints for crops, regions, and simulations
+│   │   ├── repositories/      # Data access layer
+│   │   └── main.py            # API entrypoint
 │   └── requirements.txt
-├── Front/                     # Frontend en React + Vite
+├── Front/                     # React + Vite Frontend
 │   ├── src/
-│   │   ├── components/        # Mapa (Leaflet), Sidebar, Estado de Bienvenida
-│   │   ├── decision/          # DecisionBoard, tarjetas de rotación, timeline
-│   │   └── services/          # Conexión con la API del Backend
+│   │   ├── components/        # Leaflet Map, Sidebar, Welcome State
+│   │   ├── decision/          # Decision Board, rotation cards, timeline
+│   │   └── services/          # Backend API client integration
 │   └── package.json
-├── data/                      # Datos climáticos y catálogos agronómicos
-│   ├── crops.yaml             # Requisitos agronómicos por cultivo
-│   ├── zonas.yaml             # Coordenadas y límites de zonas de San Luis
-│   └── processed/             # Series históricas diarias y mensuales
-├── pipeline/                  # Scripts de descarga y procesamiento NASA POWER
+├── data/                      # Climate data and agronomic catalogs
+│   ├── crops.yaml             # Phenological & environmental crop requirements
+│   ├── zonas.yaml             # Coordinates & bounding boxes for target zones
+│   └── processed/             # Cleaned daily and monthly climate series
+├── pipeline/                  # NASA POWER automated data extraction scripts
 └── README.md
-💻 Guía de Instalación y Uso
-Prerrequisitos
-Node.js (v18 o superior)
-Python (v3.10 o superior)
-1. Clonar el repositorio
-bash
-git clone https://github.com/TU_USUARIO/NASA-challenge-2026.git
+```
+
+---
+
+## 💻 Installation & Setup
+
+### Prerequisites
+- Node.js (v18 or higher)
+- Python (v3.10 or higher)
+
+### 1. Clone the repository
+```bash
+git clone https://github.com/YOUR_USERNAME/NASA-challenge-2026.git
 cd NASA-challenge-2026
-2. Configurar y levantar el Backend
-bash
+```
+
+### 2. Configure and run the Backend
+```bash
 cd Back
 python3 -m venv .venv
-source .venv/bin/activate  # En Windows: .venv\Scripts\activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 python run.py
+```
+*The backend API will run on `http://localhost:8000` (Swagger UI available at `/docs`).*
 
-El backend quedará corriendo en http://localhost:8000 (documentación Swagger disponible en /docs).
-
-3. Configurar y levantar el Frontend
-
-En otra terminal:
-
-bash
+### 3. Configure and run the Frontend
+In another terminal window:
+```bash
 cd Front
 npm install
 npm run dev
+```
+*Open `http://localhost:5173` in your browser to start using AgroNASA.*
 
-Abre tu navegador en http://localhost:5173 para usar la aplicación.
+---
 
-Proyecto desarrollado con orgullo para el NASA Space Apps Challenge 2026.
-
-📂 ¿Dónde guardar las fotos para que se vean en GitHub?
-Crea una carpeta llamada docs/screenshots/ en la raíz del proyecto.
-Guarda allí tus capturas con los nombres que figuran en el texto:
-01_bienvenida_mapa.png
-02_config_lote.png
-03_tarjetas_estrategias.png
-04_timeline_evidencia.png
-05_api_swagger.png (opcional)
-Cuando hagas el commit y push a GitHub, ¡se renderizarán automáticamente con las imágenes!
-
+*Developed with pride for the **NASA Space Apps Challenge 2026**.*
